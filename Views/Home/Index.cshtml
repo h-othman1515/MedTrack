@@ -1,8 +1,658 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
+    Layout = "_Layout";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@* ── Hero ──────────────────────────────────────────────────────────────────── *@
+<div class="mt-hero">
+    <div class="container">
+        <div class="mt-hero-inner text-center">
+            <span class="mt-badge mb-3">
+                <i class="bi bi-shield-check me-1"></i>Orange Internship 2025
+            </span>
+            <h1 class="mt-hero-title">
+                Smart pharmacy inventory<br class="d-none d-md-block" />
+                <span class="mt-hero-accent">for Jordan</span>
+            </h1>
+            <p class="mt-hero-sub">
+                Track medication batches, get expiry alerts before it's too late,<br class="d-none d-md-block" />
+                and trade surplus stock with nearby pharmacies.
+            </p>
+            <div class="mt-hero-actions">
+                @if (User.Identity!.IsAuthenticated)
+                {
+                    <a asp-controller="MedicationBatch" asp-action="Index" class="btn mt-btn-primary">
+                        <i class="bi bi-box-seam me-2"></i>Go to Inventory
+                    </a>
+                    <a asp-controller="SurplusPost" asp-action="Index" class="btn mt-btn-outline-white">
+                        <i class="bi bi-arrow-left-right me-2"></i>Surplus Board
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="Register" class="btn mt-btn-primary">
+                        <i class="bi bi-person-plus me-2"></i>Get Started
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn mt-btn-outline-white">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </a>
+                }
+            </div>
+
+            <div class="mt-stats-row">
+                <div class="mt-stat-pill">
+                    <span class="mt-stat-num">9</span>
+                    <span class="mt-stat-label">Data entities</span>
+                </div>
+                <div class="mt-stat-pill">
+                    <span class="mt-stat-num">5</span>
+                    <span class="mt-stat-label">User roles</span>
+                </div>
+                <div class="mt-stat-pill">
+                    <span class="mt-stat-num">3</span>
+                    <span class="mt-stat-label">Alert thresholds</span>
+                </div>
+                <div class="mt-stat-pill">
+                    <span class="mt-stat-num">3</span>
+                    <span class="mt-stat-label">Notify channels</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@* ── Features ──────────────────────────────────────────────────────────────── *@
+<section class="mt-section bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="mt-section-title">Everything a pharmacy needs</h2>
+            <p class="mt-section-sub">Six core modules covering inventory, alerts, marketplace, and reporting</p>
+        </div>
+        <div class="row g-3 justify-content-center">
+            <div class="col-md-4 col-lg-4">
+                <div class="mt-feature-card h-100">
+                    <div class="mt-feature-icon icon-blue">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <h3>Inventory management</h3>
+                    <p>Log medication batches with expiry dates, quantities, and batch numbers. Color-coded dashboard shows status at a glance.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+                <div class="mt-feature-card h-100">
+                    <div class="mt-feature-icon icon-amber">
+                        <i class="bi bi-bell-fill"></i>
+                    </div>
+                    <h3>Expiry alerts</h3>
+                    <p>Automated alerts fire at 60, 30, and 7 days before expiration — delivered via SMS, email, or in-app notification.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+                <div class="mt-feature-card h-100">
+                    <div class="mt-feature-icon icon-teal">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <h3>Surplus marketplace</h3>
+                    <p>Post excess stock publicly. Nearby pharmacies request transfers, reducing waste and recovering value from near-expiry drugs.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+                <div class="mt-feature-card h-100">
+                    <div class="mt-feature-icon icon-green">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                    <h3>Auto restock requests</h3>
+                    <p>When stock drops below the configured minimum, the system automatically generates a restock request to your distributor.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+                <div class="mt-feature-card h-100">
+                    <div class="mt-feature-icon icon-coral">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h3>Role-based access</h3>
+                    <p>Five distinct roles — Admin, Pharmacy Manager, Staff, Distributor, and MOH — each with tailored permissions and views.</p>
+                </div>
+            </div>
+            <div class="col-md-4 col-lg-4">
+                <div class="mt-feature-card h-100">
+                    <div class="mt-feature-icon icon-purple">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                    </div>
+                    <h3>MOH dashboard</h3>
+                    <p>National inventory overview with shortage reports and expiry trend charts for Ministry of Health administrators.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── Expiry Demo ───────────────────────────────────────────────────────────── *@
+<section class="mt-section" style="background:#f8f9fb;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="mt-section-title">Color-coded expiry dashboard</h2>
+            <p class="mt-section-sub">Medication batches are highlighted so staff can act before it's too late</p>
+        </div>
+
+        <div class="mt-demo-card">
+            <div class="mt-demo-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-box-seam text-primary fs-5"></i>
+                    <h3 class="mb-0">Inventory — Al-Shifa Pharmacy</h3>
+                </div>
+                <div class="mt-legend">
+                    <span class="mt-legend-item"><span class="mt-dot dot-danger"></span>≤7 days</span>
+                    <span class="mt-legend-item"><span class="mt-dot dot-warning"></span>≤30 days</span>
+                    <span class="mt-legend-item"><span class="mt-dot dot-watch"></span>≤60 days</span>
+                    <span class="mt-legend-item"><span class="mt-dot dot-success"></span>OK</span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mt-expiry-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Batch no.</th>
+                            <th>Quantity</th>
+                            <th>Expiry date</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row-critical">
+                            <td class="fw-semibold">Amoxicillin 500mg</td>
+                            <td><code>AMX-2024-09</code></td>
+                            <td>48 tabs</td>
+                            <td>Jun 3, 2025</td>
+                            <td><span class="badge bg-danger-subtle text-danger"><span class="mt-dot dot-danger me-1"></span>Critical — 4 days</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-danger">Post surplus</a></td>
+                        </tr>
+                        <tr class="row-warning">
+                            <td class="fw-semibold">Metformin 850mg</td>
+                            <td><code>MET-2024-12</code></td>
+                            <td>200 tabs</td>
+                            <td>Jun 22, 2025</td>
+                            <td><span class="badge bg-warning-subtle text-warning-emphasis"><span class="mt-dot dot-warning me-1"></span>Expiring — 23 days</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-warning">Post surplus</a></td>
+                        </tr>
+                        <tr class="row-watch">
+                            <td class="fw-semibold">Atorvastatin 20mg</td>
+                            <td><code>ATV-2025-01</code></td>
+                            <td>90 tabs</td>
+                            <td>Jul 14, 2025</td>
+                            <td><span class="badge bg-warning-subtle" style="color:#7B3F00;"><span class="mt-dot dot-watch me-1"></span>Watch — 45 days</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-secondary">View</a></td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold">Vitamin D3 1000IU</td>
+                            <td><code>VD3-2025-03</code></td>
+                            <td>500 caps</td>
+                            <td>Mar 10, 2026</td>
+                            <td><span class="badge bg-success-subtle text-success"><span class="mt-dot dot-success me-1"></span>OK — 285 days</span></td>
+                            <td><a href="#" class="btn btn-sm btn-outline-secondary">View</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── Roles ─────────────────────────────────────────────────────────────────── *@
+<section class="mt-section bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="mt-section-title">Five user roles</h2>
+            <p class="mt-section-sub">Each role sees only what they need — no clutter, no confusion</p>
+        </div>
+        <div class="row g-3 justify-content-center">
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="mt-role-card text-center">
+                    <div class="mt-role-avatar icon-coral mx-auto mb-3">
+                        <i class="bi bi-shield-fill-check"></i>
+                    </div>
+                    <h4>Admin</h4>
+                    <p>Full system access and user management</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="mt-role-card text-center">
+                    <div class="mt-role-avatar icon-blue mx-auto mb-3">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <h4>Pharmacy manager</h4>
+                    <p>Manage own pharmacy, surplus, and staff</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="mt-role-card text-center">
+                    <div class="mt-role-avatar icon-green mx-auto mb-3">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <h4>Pharmacy staff</h4>
+                    <p>Add and view inventory batches</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="mt-role-card text-center">
+                    <div class="mt-role-avatar icon-amber mx-auto mb-3">
+                        <i class="bi bi-truck-front-fill"></i>
+                    </div>
+                    <h4>Distributor</h4>
+                    <p>View and fulfil restock requests</p>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <div class="mt-role-card text-center">
+                    <div class="mt-role-avatar icon-purple mx-auto mb-3">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h4>MOH admin</h4>
+                    <p>Read-only national analytics</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* ── CTA ───────────────────────────────────────────────────────────────────── *@
+@if (!User.Identity!.IsAuthenticated)
+{
+    <section class="mt-cta-section text-center">
+        <div class="container">
+            <h2>Ready to get started?</h2>
+            <p>Register your pharmacy today and take control of your medication inventory.</p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a asp-controller="Account" asp-action="Register" class="btn mt-btn-primary">
+                    <i class="bi bi-person-plus me-2"></i>Register now
+                </a>
+                <a asp-controller="Account" asp-action="Login" class="btn mt-btn-outline-white">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign in
+                </a>
+            </div>
+        </div>
+    </section>
+}
+
+@* ── Page-specific CSS ───────────────────────────────────────────────────────
+@section Styles {
+    <style>
+        /* ── Hero ─────────────────────────────────────────────────── */
+        .mt-hero {
+            background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
+            padding: 72px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .mt-hero::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.04) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.03) 0%, transparent 40%);
+            }
+
+        .mt-hero-inner {
+            position: relative;
+            z-index: 1;
+        }
+
+        .mt-badge {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.92);
+            font-size: 0.78rem;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+
+        .mt-hero-title {
+            color: #fff;
+            font-size: 2.6rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .mt-hero-accent {
+            color: #93C5E8;
+        }
+
+        .mt-hero-sub {
+            color: rgba(255,255,255,0.78);
+            font-size: 1rem;
+            max-width: 520px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+        }
+
+        .mt-hero-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .mt-btn-primary {
+            background: #fff;
+            color: #1F4E79;
+            font-weight: 600;
+            padding: 10px 22px;
+            border-radius: 8px;
+        }
+
+            .mt-btn-primary:hover {
+                background: #f0f4f8;
+                color: #1F4E79;
+            }
+
+        .mt-btn-outline-white {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.45);
+            padding: 10px 22px;
+            border-radius: 8px;
+        }
+
+            .mt-btn-outline-white:hover {
+                background: rgba(255,255,255,0.12);
+                color: #fff;
+            }
+
+        .mt-stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .mt-stat-pill {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 14px 24px;
+            text-align: center;
+            min-width: 110px;
+        }
+
+        .mt-stat-num {
+            display: block;
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+        .mt-stat-label {
+            display: block;
+            color: rgba(255,255,255,0.68);
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+
+        /* ── Sections ─────────────────────────────────────────────── */
+        .mt-section {
+            padding: 64px 0;
+        }
+
+        .mt-section-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #1F4E79;
+            margin-bottom: 6px;
+        }
+
+        .mt-section-sub {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+
+        /* ── Feature cards ────────────────────────────────────────── */
+        .mt-feature-card {
+            background: #fff;
+            border: 1px solid #e8edf2;
+            border-radius: 14px;
+            padding: 24px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+            .mt-feature-card:hover {
+                box-shadow: 0 6px 24px rgba(31,78,121,0.09);
+                transform: translateY(-2px);
+            }
+
+            .mt-feature-card h3 {
+                font-size: 0.95rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #1a1a2e;
+            }
+
+            .mt-feature-card p {
+                font-size: 0.875rem;
+                color: #6c757d;
+                line-height: 1.65;
+                margin: 0;
+            }
+
+        .mt-feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+        }
+
+        .icon-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .icon-amber {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .icon-teal {
+            background: #ccfbf1;
+            color: #0f766e;
+        }
+
+        .icon-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .icon-coral {
+            background: #fee2e2;
+            color: #9b1c1c;
+        }
+
+        .icon-purple {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        /* ── Demo table ───────────────────────────────────────────── */
+        .mt-demo-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        }
+
+        .mt-demo-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e8edf2;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+            .mt-demo-header h3 {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: #1a1a2e;
+            }
+
+        .mt-legend {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .mt-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.78rem;
+            color: #6c757d;
+        }
+
+        .mt-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .dot-danger {
+            background: #dc3545;
+        }
+
+        .dot-warning {
+            background: #fd7e14;
+        }
+
+        .dot-watch {
+            background: #ffc107;
+        }
+
+        .dot-success {
+            background: #198754;
+        }
+
+        .mt-expiry-table {
+            font-size: 0.875rem;
+        }
+
+            .mt-expiry-table thead th {
+                font-size: 0.78rem;
+                font-weight: 600;
+                color: #6c757d;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                background: #f8f9fb;
+                padding: 10px 16px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+            .mt-expiry-table tbody td {
+                padding: 12px 16px;
+                vertical-align: middle;
+                border-bottom: 1px solid #f0f2f5;
+            }
+
+        .row-critical {
+            background: rgba(220,53,69,0.04);
+        }
+
+        .row-warning {
+            background: rgba(253,126,20,0.04);
+        }
+
+        .row-watch {
+            background: rgba(255,193,7,0.04);
+        }
+
+        /* ── Role cards ───────────────────────────────────────────── */
+        .mt-role-card {
+            background: #fff;
+            border: 1px solid #e8edf2;
+            border-radius: 14px;
+            padding: 20px 16px;
+            height: 100%;
+            transition: box-shadow 0.2s;
+        }
+
+            .mt-role-card:hover {
+                box-shadow: 0 4px 16px rgba(31,78,121,0.08);
+            }
+
+        .mt-role-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .mt-role-card h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .mt-role-card p {
+            font-size: 0.78rem;
+            color: #6c757d;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* ── CTA ──────────────────────────────────────────────────── */
+        .mt-cta-section {
+            background: linear-gradient(135deg, #1F4E79 0%, #2E75B6 100%);
+            padding: 64px 0;
+        }
+
+            .mt-cta-section h2 {
+                color: #fff;
+                font-size: 1.75rem;
+                font-weight: 600;
+                margin-bottom: 10px;
+            }
+
+            .mt-cta-section p {
+                color: rgba(255,255,255,0.75);
+                margin-bottom: 28px;
+            }
+
+        @media (max-width: 576px) {
+            .mt-hero-title
+
+        {
+            font-size: 1.85rem;
+        }
+
+        .mt-hero {
+            padding: 48px 0 56px;
+        }
+
+        .mt-stats-row {
+            gap: 10px;
+        }
+
+        .mt-stat-pill {
+            min-width: 90px;
+            padding: 10px 14px;
+        }
+
+        }
+    </style>
+} *@

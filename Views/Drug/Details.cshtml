@@ -1,0 +1,57 @@
+﻿@model MedTrackJordan.Models.Drug
+@{
+    ViewData["Title"] = Model.GenericName;
+}
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+        <h4 class="fw-bold mb-0"><i class="bi bi-capsule me-2"></i>@Model.GenericName</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9"><span class="badge bg-info text-dark">@Model.Category</span></dd>
+
+            <dt class="col-sm-3">Min Stock Level</dt>
+            <dd class="col-sm-9">@Model.MinStockLevel @Model.Unit</dd>
+        </dl>
+    </div>
+</div>
+
+<h5 class="fw-bold mb-3">Stock Across Pharmacies</h5>
+@if (Model.MedicationBatches.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Pharmacy</th>
+                    <th>Batch</th>
+                    <th>Quantity</th>
+                    <th>Expiry</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var batch in Model.MedicationBatches.OrderBy(b => b.ExpiryDate))
+                {
+                    <tr>
+                        <td>@batch.Pharmacy.Name</td>
+                        <td><code>@batch.BatchNo</code></td>
+                        <td>@batch.Quantity</td>
+                        <td>@batch.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="alert alert-light border">No stock recorded for this drug.</div>
+}
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Catalog
+    </a>
+</div>

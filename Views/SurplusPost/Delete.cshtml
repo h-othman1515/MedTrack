@@ -1,0 +1,26 @@
+﻿@model MedTrackJordan.Models.SurplusPost
+@{
+    ViewData["Title"] = "Delete Post";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-body p-4 text-center">
+                <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                <h4 class="fw-bold mt-3">Remove Surplus Post?</h4>
+                <p class="text-muted">
+                    <strong>@Model.Drug.GenericName</strong> — @Model.Quantity units from @Model.Pharmacy.Name
+                </p>
+
+                <form asp-action="Delete" class="mt-4">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger fw-semibold">
+                        <i class="bi bi-trash me-1"></i>Confirm Delete
+                    </button>
+                    <a asp-action="MyPosts" class="btn btn-outline-secondary ms-2">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,63 @@
+﻿@model IEnumerable<MedTrackJordan.Models.Pharmacy>
+@{ ViewData["Title"] = "Pharmacies"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="bi bi-building me-2"></i>Pharmacies</h3>
+    @if (User.IsInRole("Admin") || User.IsInRole("MOHAdmin"))
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add Pharmacy
+        </a>
+    }
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>License No</th>
+                    <th>Governorate</th>
+                    <th>Contact</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.Name</td>
+                        <td><span class="badge bg-secondary">@item.LicenseNo</span></td>
+                        <td>@item.Governorate</td>
+                        <td>
+                            <div class="small text-muted">@item.ContactEmail</div>
+                            <div class="small text-muted">@item.Phone</div>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if (User.IsInRole("Admin") || User.IsInRole("MOHAdmin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-building-x fs-1"></i>
+            <p class="mt-2">No pharmacies registered yet.</p>
+        </div>
+    }
+</div>

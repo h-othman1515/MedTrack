@@ -1,0 +1,83 @@
+﻿@model IEnumerable<MedTrackJordan.Models.TransferRequest>
+@{ ViewData["Title"] = "Transfer Requests"; }
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="bi bi-send me-2"></i>Transfer Requests</h3>
+    <a asp-controller="SurplusPost" asp-action="Index" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-left-right me-1"></i>Browse Surplus
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Drug</th>
+                    <th>From</th>
+                    <th>Requesting</th>
+                    <th>Status</th>
+                    <th>Requested</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@item.SurplusPost.Drug.GenericName</td>
+                        <td>@item.SurplusPost.Pharmacy.Name</td>
+                        <td>@item.RequestingPharmacy.Name</td>
+                        <td>
+                            @{
+                                var badge = item.Status switch
+                                {
+                                    MedTrackJordan.Models.TransferStatus.Pending => "bg-warning text-dark",
+                                    MedTrackJordan.Models.TransferStatus.Confirmed => "bg-info",
+                                    MedTrackJordan.Models.TransferStatus.Completed => "bg-success",
+                                    MedTrackJordan.Models.TransferStatus.Cancelled => "bg-secondary",
+                                    _ => "bg-light"
+                                };
+                            }
+                            <span class="badge @badge">@item.Status</span>
+                        </td>
+                        <td class="small text-muted">@item.RequestedAt.ToString("yyyy-MM-dd")</td>
+                        <td class="text-end">
+                            @if (item.Status == MedTrackJordan.Models.TransferStatus.Pending)
+                            {
+                                <form asp-action="Confirm" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-check-lg"></i> Confirm
+                                    </button>
+                                </form>
+                                <form asp-action="Cancel" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-x-lg"></i> Cancel
+                                    </button>
+                                </form>
+                            }
+                            @if (item.Status == MedTrackJordan.Models.TransferStatus.Confirmed)
+                            {
+                                <form asp-action="Complete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-check-all"></i> Complete
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1"></i>
+            <p class="mt-2">No transfer requests yet.</p>
+        </div>
+    }
+</div>

@@ -1,0 +1,58 @@
+﻿@model MedTrackJordan.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+
+                <div class="text-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex
+                                align-items-center justify-content-center"
+                         style="width:72px;height:72px;font-size:2rem;">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <h4 class="fw-bold mt-3">@Model.FullName</h4>
+                    <span class="badge bg-primary">@Model.Role</span>
+                </div>
+
+                <form asp-action="Profile" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-semibold"></label>
+                        <input asp-for="FullName" class="form-control" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <input asp-for="Email" class="form-control" readonly />
+                        <div class="form-text">Email cannot be changed here.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Role" class="form-label fw-semibold"></label>
+                        <input asp-for="Role" class="form-control" readonly />
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-check-lg me-1"></i>Save Changes
+                        </button>
+                        <a asp-action="ChangePassword" class="btn btn-outline-secondary">
+                            <i class="bi bi-key me-1"></i>Change Password
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>

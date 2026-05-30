@@ -1,20 +1,17 @@
-using System.Diagnostics;
 using MedTrack.Models;
+using MedTrackJordan.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
-namespace MedTrack.Controllers
+namespace MedTrackJordan.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
         public IActionResult Index()
         {
+            if (User.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Dashboard", "Admin");
+
             return View();
         }
 

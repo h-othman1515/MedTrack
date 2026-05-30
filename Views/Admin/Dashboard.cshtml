@@ -1,0 +1,133 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+    var expiringSoon = ViewBag.ExpiringSoon as List < MedTrackJordan.Models.MedicationBatch >;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="bi bi-bar-chart-line me-2"></i>Admin Dashboard</h3>
+    <span class="badge bg-primary">@User.Identity?.Name</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 bg-primary bg-opacity-10 text-center">
+            <div class="card-body">
+                <div class="fw-bold fs-3 text-primary">@ViewBag.TotalPharmacies</div>
+                <div class="small text-muted">Pharmacies</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 bg-info bg-opacity-10 text-center">
+            <div class="card-body">
+                <div class="fw-bold fs-3 text-info">@ViewBag.TotalDrugs</div>
+                <div class="small text-muted">Drugs</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 bg-success bg-opacity-10 text-center">
+            <div class="card-body">
+                <div class="fw-bold fs-3 text-success">@ViewBag.TotalBatches</div>
+                <div class="small text-muted">Batches</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 bg-warning bg-opacity-10 text-center">
+            <div class="card-body">
+                <div class="fw-bold fs-3 text-warning">@ViewBag.TotalSurplus</div>
+                <div class="small text-muted">Surplus Posts</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 bg-secondary bg-opacity-10 text-center">
+            <div class="card-body">
+                <div class="fw-bold fs-3 text-secondary">@ViewBag.PendingTransfers</div>
+                <div class="small text-muted">Pending Transfers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-lg-2">
+        <div class="card border-0 bg-danger bg-opacity-10 text-center">
+            <div class="card-body">
+                <div class="fw-bold fs-3 text-danger">@ViewBag.LowStock</div>
+                <div class="small text-muted">Low Stock</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Expiring Soon (Next 30 Days)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Drug</th>
+                                <th>Pharmacy</th>
+                                <th>Batch</th>
+                                <th>Qty</th>
+                                <th>Days Left</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var batch in expiringSoon)
+                            {
+                                var days = (batch.ExpiryDate - DateTime.UtcNow).Days;
+                                <tr>
+                                    <td class="fw-semibold">@batch.Drug.GenericName</td>
+                                    <td>@batch.Pharmacy.Name</td>
+                                    <td><code class="small">@batch.BatchNo</code></td>
+                                    <td>@batch.Quantity</td>
+                                    <td>
+                                        <span class="badge @(days < 0 ? "bg-dark" : days <= 7 ? "bg-danger" : "bg-warning text-dark")">
+                                            @(days < 0 ? "Expired" : $"{days} days")
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (!expiringSoon.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle fs-1 text-success"></i>
+                        <p class="mt-2">No batches expiring in the next 30 days.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-controller="Pharmacy" asp-action="Create" class="btn btn-outline-primary">
+                        <i class="bi bi-building-add me-2"></i>Add Pharmacy
+                    </a>
+                    <a asp-controller="Drug" asp-action="Create" class="btn btn-outline-info">
+                        <i class="bi bi-capsule me-2"></i>Add Drug
+                    </a>
+                    <a asp-controller="MedicationBatch" asp-action="Create" class="btn btn-outline-success">
+                        <i class="bi bi-box-seam me-2"></i>Add Inventory
+                    </a>
+                    <a asp-controller="SurplusPost" asp-action="Index" class="btn btn-outline-warning">
+                        <i class="bi bi-arrow-left-right me-2"></i>View Surplus Board
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
