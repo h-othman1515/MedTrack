@@ -1,0 +1,186 @@
+@model MedTrack.Models.ViewModels.AuditLogViewModel
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-journal-text me-2"></i>Audit Logs</h2>
+            <p class="text-muted mb-0">System activity tracking and security audit trail</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="exportTableToCSV('auditTable', 'audit_logs.csv')">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <button type="button" class="btn btn-outline-danger"
+                    data-mt-swal-message="Delete audit logs older than 90 days? This action cannot be undone."
+                    data-mt-swal-title="Clear old logs"
+                    data-mt-swal-icon="warning"
+                    data-mt-swal-danger="true"
+                    data-mt-swal-confirm-text="Delete logs"
+                    data-mt-swal-success="Old audit logs cleared">
+                <i class="bi bi-trash me-1"></i>Clear Old
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchAudit" placeholder="Search logs...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterActionType">
+                        <option value="">All Actions</option>
+                        <option>Create</option>
+                        <option>Update</option>
+                        <option>Delete</option>
+                        <option>Login</option>
+                        <option>Transfer</option>
+                        <option>Alert</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterEntityType">
+                        <option value="">All Entities</option>
+                        <option>User</option>
+                        <option>Pharmacy</option>
+                        <option>Inventory</option>
+                        <option>Transfer</option>
+                        <option>Drug</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" id="filterDateFrom" placeholder="From">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" class="form-control" id="filterDateTo" placeholder="To">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetAuditFilters()">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0 datatable" id="auditTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Entity</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model.Logs)
+                        {
+                            <tr>
+                                <td class="small">@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>
+                                    <div class="fw-bold small">@log.UserName</div>
+                                    <small class="text-muted">@log.UserRole</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(log.Action == "Delete" ? "danger" : log.Action == "Create" ? "success" : log.Action == "Login" ? "primary" : "info")">
+                                        @log.Action
+                                    </span>
+                                </td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@log.EntityType</span></td>
+                                <td class="small">@log.Details</td>
+                                <td><code class="small">@log.IpAddress</code></td>
+                                <td>
+                                    @if (log.Severity == "High")
+                                    {
+                                        <span class="badge bg-danger">High</span>
+                                    }
+                                    else if (log.Severity == "Medium")
+                                    {
+                                        <span class="badge bg-warning text-dark">Medium</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Low</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Logs.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Time = DateTime.Now.AddMinutes(-2), User = "Admin", Role = "System Admin", Action = "Delete", Entity = "User", Details = "Deleted user account u-1045 (violation)", Ip = "192.168.1.10", Sev = "High" },
+                                new { Time = DateTime.Now.AddMinutes(-5), User = "Ahmad Khalil", Role = "Pharmacy Manager", Action = "Create", Entity = "Inventory", Details = "Added 150 units of Amoxicillin 500mg", Ip = "172.16.0.45", Sev = "Low" },
+                                new { Time = DateTime.Now.AddMinutes(-8), User = "Dr. Layla Mahmoud", Role = "MOH Admin", Action = "Update", Entity = "Pharmacy", Details = "Changed pharmacy tier to Enterprise", Ip = "10.0.0.12", Sev = "Medium" },
+                                new { Time = DateTime.Now.AddMinutes(-12), User = "Sara Nasser", Role = "Pharmacy Staff", Action = "Login", Entity = "User", Details = "Successful login from mobile app", Ip = "172.16.0.88", Sev = "Low" },
+                                new { Time = DateTime.Now.AddMinutes(-15), User = "System", Role = "System", Action = "Alert", Entity = "Inventory", Details = "Auto-generated expiry alert for batch AMX20250601", Ip = "127.0.0.1", Sev = "Low" },
+                                new { Time = DateTime.Now.AddMinutes(-20), User = "Jordan Pharma Dist.", Role = "Distributor", Action = "Update", Entity = "Transfer", Details = "Confirmed delivery for restock request #1002", Ip = "192.168.2.20", Sev = "Low" },
+                                new { Time = DateTime.Now.AddMinutes(-25), User = "Unknown", Role = "—", Action = "Login", Entity = "User", Details = "Failed login attempt (3x)", Ip = "203.0.113.45", Sev = "High" },
+                                new { Time = DateTime.Now.AddMinutes(-30), User = "Khaled Omar", Role = "Pharmacy Staff", Action = "Create", Entity = "Transfer", Details = "Requested transfer of 20 Omeprazole from Salt City", Ip = "172.16.0.92", Sev = "Low" }
+                            })
+                            {
+                                <tr>
+                                    <td class="small">@demo.Time.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td>
+                                        <div class="fw-bold small">@demo.User</div>
+                                        <small class="text-muted">@demo.Role</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(demo.Action == "Delete" ? "danger" : demo.Action == "Create" ? "success" : demo.Action == "Login" ? "primary" : "info")">
+                                            @demo.Action
+                                        </span>
+                                    </td>
+                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@demo.Entity</span></td>
+                                    <td class="small">@demo.Details</td>
+                                    <td><code class="small">@demo.Ip</code></td>
+                                    <td>
+                                        @if (demo.Sev == "High")
+                                        {
+                                            <span class="badge bg-danger">High</span>
+                                        }
+                                        else if (demo.Sev == "Medium")
+                                        {
+                                            <span class="badge bg-warning text-dark">Medium</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Low</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function resetAuditFilters() {
+            $('#searchAudit').val('');
+            $('#filterActionType').val('');
+            $('#filterEntityType').val('');
+            $('#filterDateFrom').val('');
+            $('#filterDateTo').val('');
+            $('#auditTable tbody tr').show();
+        }
+    </script>
+}

@@ -1,28 +1,40 @@
-﻿@model MedTrackJordan.Models.Drug
+﻿@model MedTrack.Models.Drug
 @{
     ViewData["Title"] = "Delete Drug";
+    ViewData["PageIcon"] = "bi-exclamation-triangle";
+    ViewData["Subtitle"] = "Remove from national catalog";
+    ViewData["BackUrl"] = Url.Action("Index");
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm border-danger">
-            <div class="card-body p-4 text-center">
-                <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
-                <h4 class="fw-bold mt-3">Remove Drug?</h4>
-                <p class="text-muted">This will delete <strong>@Model.GenericName</strong> from the catalog.</p>
+<div class="fade-in">
+    <partial name="_PageHeader" />
 
-                <div class="alert alert-warning small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Deletion is blocked if any pharmacy has stock of this drug.
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-danger">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    <h4 class="fw-bold mt-3">Remove Drug?</h4>
+                    <p class="text-muted">This will delete <strong>@Model.GenericName</strong> from the catalog.</p>
+
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Deletion is blocked if any pharmacy has stock of this drug.
+                    </div>
+
+                    <form asp-action="Delete" class="mt-4"
+                          data-mt-swal-confirm="Delete @Model.GenericName from the catalog?"
+                          data-mt-swal-title="Confirm deletion"
+                          data-mt-swal-icon="warning"
+                          data-mt-swal-danger="true"
+                          data-mt-swal-confirm-text="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash me-1"></i>Confirm Delete
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </form>
                 </div>
-
-                <form asp-action="Delete" class="mt-4">
-                    <input type="hidden" asp-for="Id" />
-                    <button type="submit" class="btn btn-danger fw-semibold">
-                        <i class="bi bi-trash me-1"></i>Confirm Delete
-                    </button>
-                    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
-                </form>
             </div>
         </div>
     </div>

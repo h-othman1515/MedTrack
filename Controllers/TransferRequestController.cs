@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using MedTrackJordan.Data;
-using MedTrackJordan.Models;
+using MedTrack.Data;
+using MedTrack.Models;
 
-namespace MedTrackJordan.Controllers
+namespace MedTrack.Controllers
 {
     [Authorize]
     public class TransferRequestController : Controller

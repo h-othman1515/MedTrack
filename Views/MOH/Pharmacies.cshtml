@@ -1,0 +1,51 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "Pharmacies";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-shop me-2"></i>Registered Pharmacies</h2>
+            <p class="text-muted mb-0">@Model.TotalPharmacies pharmacies across 12 governorates</p>
+        </div>
+        <a href="/Pharmacy" class="btn btn-outline-primary"><i class="bi bi-list me-1"></i>Full Directory</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                    <tr>
+                        <th>Pharmacy</th>
+                        <th>Governorate</th>
+                        <th>Batches</th>
+                        <th>Active Shortages</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in new[] {
+                        new { Name = "Al-Shifa Pharmacy", Gov = "Amman", Batches = 120, Short = 2, Status = "Active" },
+                        new { Name = "Zarqa Central Pharmacy", Gov = "Zarqa", Batches = 88, Short = 5, Status = "Active" },
+                        new { Name = "Irbid Medical Pharmacy", Gov = "Irbid", Batches = 95, Short = 3, Status = "Active" },
+                        new { Name = "Salt City Pharma", Gov = "Balqa", Batches = 60, Short = 1, Status = "Active" },
+                        new { Name = "Karak Care Pharmacy", Gov = "Karak", Batches = 42, Short = 4, Status = "Pending" }
+                    })
+                    {
+                        <tr>
+                            <td class="fw-semibold">@p.Name</td>
+                            <td>@p.Gov</td>
+                            <td>@p.Batches</td>
+                            <td><span class="badge bg-@(p.Short > 3 ? "danger" : "warning text-dark")">@p.Short</span></td>
+                            <td><span class="badge bg-@(p.Status == "Active" ? "success" : "secondary")">@p.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

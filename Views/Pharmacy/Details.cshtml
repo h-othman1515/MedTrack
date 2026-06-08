@@ -1,93 +1,100 @@
-﻿@model MedTrackJordan.Models.Pharmacy
+﻿@model MedTrack.Models.Pharmacy
 @{
     ViewData["Title"] = Model.Name;
+    ViewData["PageIcon"] = "bi-building";
+    ViewData["Subtitle"] = "Pharmacy profile and inventory";
+    ViewData["BackUrl"] = Url.Action("Index");
 }
 
-<div class="row">
-    <div class="col-md-8">
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3">
-                <h4 class="fw-bold mb-0"><i class="bi bi-building me-2"></i>@Model.Name</h4>
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-building me-2"></i>@Model.Name</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">License No</dt>
+                        <dd class="col-sm-9"><span class="badge bg-secondary">@Model.LicenseNo</span></dd>
+
+                        <dt class="col-sm-3">Governorate</dt>
+                        <dd class="col-sm-9">@Model.Governorate</dd>
+
+                        <dt class="col-sm-3">Address</dt>
+                        <dd class="col-sm-9">@Model.Address</dd>
+
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9">@Model.ContactEmail</dd>
+
+                        <dt class="col-sm-3">Phone</dt>
+                        <dd class="col-sm-9">@Model.Phone</dd>
+                    </dl>
+                </div>
             </div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-3">License No</dt>
-                    <dd class="col-sm-9"><span class="badge bg-secondary">@Model.LicenseNo</span></dd>
 
-                    <dt class="col-sm-3">Governorate</dt>
-                    <dd class="col-sm-9">@Model.Governorate</dd>
-
-                    <dt class="col-sm-3">Address</dt>
-                    <dd class="col-sm-9">@Model.Address</dd>
-
-                    <dt class="col-sm-3">Email</dt>
-                    <dd class="col-sm-9">@Model.ContactEmail</dd>
-
-                    <dt class="col-sm-3">Phone</dt>
-                    <dd class="col-sm-9">@Model.Phone</dd>
-                </dl>
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-box-seam me-2"></i>Inventory</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.MedicationBatches.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-medtrack mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Drug</th>
+                                        <th>Batch</th>
+                                        <th>Qty</th>
+                                        <th>Expiry</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var batch in Model.MedicationBatches.OrderBy(b => b.ExpiryDate))
+                                    {
+                                        var days = (batch.ExpiryDate - DateTime.UtcNow).Days;
+                                        var badgeClass = days < 0 ? "bg-danger" : days <= 30 ? "bg-warning text-dark" : "bg-success";
+                                        <tr>
+                                            <td>@batch.Drug.GenericName</td>
+                                            <td><code>@batch.BatchNo</code></td>
+                                            <td>@batch.Quantity</td>
+                                            <td><span class="badge @badgeClass">@batch.ExpiryDate.ToString("yyyy-MM-dd")</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="p-4 text-center text-muted">No inventory recorded.</div>
+                    }
+                </div>
             </div>
         </div>
 
-        <h5 class="fw-bold mb-3"><i class="bi bi-box-seam me-2"></i>Inventory</h5>
-        @if (Model.MedicationBatches.Any())
-        {
-            <div class="table-responsive">
-                <table class="table table-sm table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Drug</th>
-                            <th>Batch</th>
-                            <th>Qty</th>
-                            <th>Expiry</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var batch in Model.MedicationBatches.OrderBy(b => b.ExpiryDate))
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="fw-bold">Staff Members</h6>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var user in Model.Staff)
                         {
-                            var days = (batch.ExpiryDate - DateTime.UtcNow).Days;
-                            var badgeClass = days < 0 ? "bg-danger" : days <= 30 ? "bg-warning text-dark" : "bg-success";
-                            <tr>
-                                <td>@batch.Drug.GenericName</td>
-                                <td><code>@batch.BatchNo</code></td>
-                                <td>@batch.Quantity</td>
-                                <td><span class="badge @badgeClass">@batch.ExpiryDate.ToString("yyyy-MM-dd")</span></td>
-                            </tr>
+                            <li class="list-group-item px-0">
+                                <i class="bi bi-person-circle me-2 text-primary"></i>@user.FullName
+                                <div class="small text-muted">@user.Email</div>
+                            </li>
                         }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-light border">No inventory recorded.</div>
-        }
-    </div>
-
-    <div class="col-md-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-body">
-                <h6 class="fw-bold">Staff Members</h6>
-                <ul class="list-group list-group-flush">
-                    @foreach (var user in Model.Users)
-                    {
-                        <li class="list-group-item px-0">
-                            <i class="bi bi-person-circle me-2 text-primary"></i>@user.FullName
-                            <div class="small text-muted">@user.Email</div>
-                        </li>
-                    }
-                    @if (!Model.Users.Any())
-                    {
-                        <li class="list-group-item px-0 text-muted">No users assigned.</li>
-                    }
-                </ul>
+                        @if (!Model.Staff.Any())
+                        {
+                            <li class="list-group-item px-0 text-muted">No users assigned.</li>
+                        }
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-<div class="mt-4">
-    <a asp-action="Index" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i>Back to List
-    </a>
 </div>

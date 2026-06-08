@@ -1,0 +1,287 @@
+@model MedTrack.Models.ViewModels.BroadcastViewModel
+@{
+    ViewData["Title"] = "Broadcast";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-broadcast me-2"></i>Broadcast Notifications</h2>
+            <p class="text-muted mb-0">Send system-wide alerts, announcements, and emergency notifications</p>
+        </div>
+        <a href="/Admin/NotificationHistory" class="btn btn-outline-primary">
+            <i class="bi bi-clock-history me-1"></i>History
+        </a>
+    </div>
+
+    <div class="row g-4 mt-broadcast-layout">
+        <!-- Compose Form -->
+        <div class="col-lg-8">
+            <div class="card mt-broadcast-compose">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Compose Broadcast</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="SendBroadcast" method="post" class="mt-broadcast-form">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mt-form-block mb-4">
+                            <label class="form-label fw-semibold mb-3">Target Audience</label>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="mt-audience-tile">
+                                        <input class="mt-audience-tile__input" type="checkbox" id="targetAll" checked>
+                                        <span class="mt-audience-tile__icon"><i class="bi bi-people-fill"></i></span>
+                                        <span class="mt-audience-tile__title">All Users</span>
+                                        <span class="mt-audience-tile__hint">Everyone on platform</span>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="mt-audience-tile">
+                                        <input class="mt-audience-tile__input" type="checkbox" id="targetPharmacies">
+                                        <span class="mt-audience-tile__icon"><i class="bi bi-shop"></i></span>
+                                        <span class="mt-audience-tile__title">Pharmacies</span>
+                                        <span class="mt-audience-tile__hint">All pharmacy accounts</span>
+                                    </label>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="mt-audience-tile">
+                                        <input class="mt-audience-tile__input" type="checkbox" id="targetDistributors">
+                                        <span class="mt-audience-tile__icon"><i class="bi bi-truck"></i></span>
+                                        <span class="mt-audience-tile__title">Distributors</span>
+                                        <span class="mt-audience-tile__hint">Supply chain partners</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-form-block mb-4">
+                            <label class="form-label fw-semibold mb-2">Governorates <span class="text-muted fw-normal">(optional)</span></label>
+                            <div class="mt-gov-pills">
+                                @foreach (var gov in new[] { "Amman", "Irbid", "Zarqa", "Balqa", "Madaba", "Mafraq", "Karak", "Ajloun", "Jerash", "Tafilah", "Ma'an", "Aqaba" })
+                                {
+                                    <label class="mt-gov-pill">
+                                        <input type="checkbox" id="gov_@gov" name="Governorates" value="@gov">
+                                        <span>@gov</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Notification Type</label>
+                                <select class="form-select" name="NotificationType">
+                                    <option value="Announcement">General Announcement</option>
+                                    <option value="Alert">System Alert</option>
+                                    <option value="Emergency">Emergency Broadcast</option>
+                                    <option value="Maintenance">Scheduled Maintenance</option>
+                                    <option value="Update">Feature Update</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Channels</label>
+                                <div class="mt-channel-pills">
+                                    <label class="mt-channel-pill">
+                                        <input type="checkbox" id="channelInApp" name="Channels" value="InApp" checked>
+                                        <span><i class="bi bi-bell"></i> In-App</span>
+                                    </label>
+                                    <label class="mt-channel-pill">
+                                        <input type="checkbox" id="channelEmail" name="Channels" value="Email">
+                                        <span><i class="bi bi-envelope"></i> Email</span>
+                                    </label>
+                                    <label class="mt-channel-pill">
+                                        <input type="checkbox" id="channelSMS" name="Channels" value="SMS">
+                                        <span><i class="bi bi-phone"></i> SMS</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Subject / Title</label>
+                            <input type="text" class="form-control form-control-lg" name="Subject" placeholder="e.g., System Maintenance Scheduled" required />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Message</label>
+                            <textarea class="form-control" name="Message" rows="6" placeholder="Enter your broadcast message here..." required></textarea>
+                            <div class="form-text"><i class="bi bi-info-circle me-1"></i>SMS messages will be truncated to 160 characters.</div>
+                        </div>
+
+                        <div class="mt-broadcast-form__footer">
+                            <label class="mt-schedule-toggle">
+                                <input type="checkbox" id="scheduleLater" name="ScheduleLater">
+                                <span><i class="bi bi-calendar-event me-1"></i>Schedule for later</span>
+                            </label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" class="btn btn-outline-secondary" onclick="previewBroadcast()">
+                                    <i class="bi bi-eye me-1"></i>Preview
+                                </button>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-send me-1"></i>Send Broadcast
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates & History -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-stars me-2 text-warning"></i>Quick Templates</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div class="d-grid gap-2">
+                        <button type="button" class="mt-template-btn mt-template-btn--primary" onclick="loadTemplate('maintenance')">
+                            <span class="mt-template-btn__icon"><i class="bi bi-tools"></i></span>
+                            <span class="mt-template-btn__text">
+                                <strong>System Maintenance</strong>
+                                <small>Scheduled downtime notice</small>
+                            </span>
+                            <i class="bi bi-chevron-right ms-auto"></i>
+                        </button>
+                        <button type="button" class="mt-template-btn mt-template-btn--danger" onclick="loadTemplate('emergency')">
+                            <span class="mt-template-btn__icon"><i class="bi bi-exclamation-triangle"></i></span>
+                            <span class="mt-template-btn__text">
+                                <strong>Emergency Alert</strong>
+                                <small>Critical shortage broadcast</small>
+                            </span>
+                            <i class="bi bi-chevron-right ms-auto"></i>
+                        </button>
+                        <button type="button" class="mt-template-btn mt-template-btn--success" onclick="loadTemplate('update')">
+                            <span class="mt-template-btn__icon"><i class="bi bi-arrow-up-circle"></i></span>
+                            <span class="mt-template-btn__text">
+                                <strong>New Feature Update</strong>
+                                <small>Product announcement</small>
+                            </span>
+                            <i class="bi bi-chevron-right ms-auto"></i>
+                        </button>
+                        <button type="button" class="mt-template-btn mt-template-btn--warning" onclick="loadTemplate('shortage')">
+                            <span class="mt-template-btn__icon"><i class="bi bi-capsule"></i></span>
+                            <span class="mt-template-btn__text">
+                                <strong>National Shortage Notice</strong>
+                                <small>Regional shortage alert</small>
+                            </span>
+                            <i class="bi bi-chevron-right ms-auto"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2"></i>Recent Broadcasts</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="mt-broadcast-feed">
+                        @foreach (var broadcast in Model.RecentBroadcasts)
+                        {
+                            var feedClass = broadcast.Type == "Emergency" ? "danger" : broadcast.Type == "Alert" ? "warning" : "primary";
+                            <div class="mt-broadcast-feed__item mt-broadcast-feed__item--@feedClass">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                    <span class="fw-bold small">@broadcast.Subject</span>
+                                    <span class="badge bg-@(feedClass == "warning" ? "warning text-dark" : feedClass)">@broadcast.Type</span>
+                                </div>
+                                <p class="small text-muted mb-2">@broadcast.Message.Substring(0, Math.Min(60, broadcast.Message.Length))...</p>
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span><i class="bi bi-clock me-1"></i>@broadcast.SentAt.ToString("MMM dd, HH:mm")</span>
+                                    <span><i class="bi bi-people me-1"></i>@broadcast.RecipientsCount recipients</span>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.RecentBroadcasts.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Subject = "System Maintenance Tonight", Type = "Maintenance", Message = "Scheduled maintenance from 02:00 to 04:00 AM. Platform will be unavailable.", Time = DateTime.Now.AddDays(-1), Recipients = 156 },
+                                new { Subject = "Critical Insulin Shortage", Type = "Emergency", Message = "National shortage of Insulin Glargine detected. MOH coordinating emergency supply.", Time = DateTime.Now.AddDays(-2), Recipients = 342 },
+                                new { Subject = "New Surplus Feature", Type = "Update", Message = "You can now list surplus stock with optional pricing. Check it out!", Time = DateTime.Now.AddDays(-5), Recipients = 156 }
+                            })
+                            {
+                                var feedClass = demo.Type == "Emergency" ? "danger" : demo.Type == "Alert" ? "warning" : "primary";
+                                <div class="mt-broadcast-feed__item mt-broadcast-feed__item--@feedClass">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                        <span class="fw-bold small">@demo.Subject</span>
+                                        <span class="badge bg-@(feedClass == "warning" ? "warning text-dark" : feedClass)">@demo.Type</span>
+                                    </div>
+                                    <p class="small text-muted mb-2">@demo.Message.Substring(0, Math.Min(60, demo.Message.Length))...</p>
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span><i class="bi bi-clock me-1"></i>@demo.Time.ToString("MMM dd, HH:mm")</span>
+                                        <span><i class="bi bi-people me-1"></i>@demo.Recipients recipients</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function loadTemplate(type) {
+            var templates = {
+                maintenance: {
+                    subject: 'Scheduled System Maintenance',
+                    message: 'MedTrack will undergo scheduled maintenance on [DATE] from [TIME] to [TIME]. During this period, the platform will be temporarily unavailable. Please complete any urgent tasks before the maintenance window.
+
+Thank you for your patience.',
+                    type: 'Maintenance'
+                },
+                emergency: {
+                    subject: 'URGENT: National Medication Shortage Alert',
+                    message: 'The Ministry of Health has declared a national shortage of [DRUG NAME]. All pharmacies are advised to:
+
+1. Check current stock levels immediately
+2. List any surplus on the marketplace
+3. Contact your distributor for emergency restock
+4. Report SOS if stock falls below critical threshold
+
+MOH is coordinating emergency supply. Updates will follow.',
+                    type: 'Emergency'
+                },
+                update: {
+                    subject: 'New Feature: Enhanced Analytics Dashboard',
+                    message: 'We are excited to announce new features now available on MedTrack:
+
+- Real-time shortage heatmaps
+- Automated waste trend reports
+- Distributor demand forecasting
+- Mobile app notifications
+
+Log in to explore these improvements.',
+                    type: 'Update'
+                },
+                shortage: {
+                    subject: 'National Shortage: [Drug Name]',
+                    message: 'A shortage of [DRUG NAME] has been detected in the following governorates: [GOVERNORATES].
+
+Pharmacies with surplus stock are encouraged to list it on the marketplace immediately.
+
+Contact your distributor for emergency restock options.',
+                    type: 'Alert'
+                }
+            };
+            var t = templates[type];
+            $('select[name="NotificationType"]').val(t.type);
+            $('input[name="Subject"]').val(t.subject);
+            $('textarea[name="Message"]').val(t.message);
+            showToast('Template loaded', 'success');
+        }
+        function previewBroadcast() {
+            var subject = $('input[name="Subject"]').val();
+            var message = $('textarea[name="Message"]').val();
+            mtAlert('Subject: ' + subject + '\n\n' + message, {
+                title: 'Broadcast preview',
+                icon: 'info',
+                confirmText: 'Close'
+            });
+        }
+    </script>
+}

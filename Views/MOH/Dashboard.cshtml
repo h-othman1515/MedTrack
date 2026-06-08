@@ -1,0 +1,342 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "National Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-grid me-2"></i>National Analytics Dashboard</h2>
+            <p class="text-muted mb-0">Ministry of Health - Real-time pharmaceutical supply chain overview</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/MOH/Reports" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i>Export Report
+            </a>
+            <a href="/MOH/Shortages" class="btn btn-primary">
+                <i class="bi bi-map me-1"></i>Shortage Map
+            </a>
+        </div>
+    </div>
+
+    <!-- National Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Registered Pharmacies</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalPharmacies</h3>
+                            <small class="text-primary">Across 12 governorates</small>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Active Shortages</p>
+                            <h3 class="fw-bold mb-0">@Model.ActiveShortages</h3>
+                            <small class="text-danger"><i class="bi bi-arrow-up"></i> @Model.ResolvedThisMonth resolved this month</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Waste This Month</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalWasteThisMonth.ToString("C0")</h3>
+                            <small class="text-warning">JOD in expired medications</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-trash"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Saved via Transfers</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalSavedViaTransfers.ToString("C0")</h3>
+                            <small class="text-success">JOD prevented from waste</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2"></i>Shortages by Governorate</h5>
+                    <select class="form-select form-select-sm" style="width: 150px;">
+                        <option>Current Month</option>
+                        <option>Last 3 Months</option>
+                        <option>Year to Date</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="shortageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-trophy me-2"></i>Top 20 Shortages</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var shortage in Model.TopShortages)
+                        {
+                            <div class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">@shortage.DrugName</h6>
+                                        <small class="text-muted">@shortage.GenericName | @shortage.Category</small>
+                                    </div>
+                                    <span class="badge bg-danger">@shortage.PharmaciesShort pharmacies</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2 small">
+                                    <span class="text-muted">@shortage.GovernoratesAffected governorates affected</span>
+                                    <span class="text-danger">@shortage.DaysSinceFirstReported days since first report</span>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.TopShortages.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Name = "Insulin Glargine", Generic = "Insulin Glargine", Category = "Diabetes", Pharmacies = 24, Govs = 8, Days = 12 },
+                                new { Name = "Amoxicillin 500mg", Generic = "Amoxicillin", Category = "Antibiotics", Pharmacies = 18, Govs = 6, Days = 5 },
+                                new { Name = "Metformin 850mg", Generic = "Metformin HCl", Category = "Diabetes", Pharmacies = 15, Govs = 5, Days = 8 },
+                                new { Name = "Atorvastatin 20mg", Generic = "Atorvastatin", Category = "Cardiovascular", Pharmacies = 12, Govs = 4, Days = 3 },
+                                new { Name = "Salbutamol Inhaler", Generic = "Salbutamol", Category = "Respiratory", Pharmacies = 10, Govs = 4, Days = 2 }
+                            })
+                            {
+                                <div class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="fw-bold mb-1">@demo.Name</h6>
+                                            <small class="text-muted">@demo.Generic | @demo.Category</small>
+                                        </div>
+                                        <span class="badge bg-danger">@demo.Pharmacies pharmacies</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2 small">
+                                        <span class="text-muted">@demo.Govs governorates affected</span>
+                                        <span class="text-danger">@demo.Days days since first report</span>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waste & Transfer Trends -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-graph-down me-2"></i>Expiry Waste by Region</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-medtrack mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Governorate</th>
+                                    <th>Waste (JOD)</th>
+                                    <th>Items</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var waste in Model.ExpiryWasteByRegion)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@waste.Governorate</td>
+                                        <td>@waste.WasteValue.ToString("C0")</td>
+                                        <td>@waste.ItemsWasted</td>
+                                        <td>
+                                            @if (waste.TrendVsLastMonth > 0)
+                                            {
+                                                <span class="text-danger"><i class="bi bi-arrow-up"></i> @waste.TrendVsLastMonth%</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-success"><i class="bi bi-arrow-down"></i> @Math.Abs(waste.TrendVsLastMonth)%</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!Model.ExpiryWasteByRegion.Any())
+                                {
+                                    @foreach (var demo in new[] {
+                                        new { Gov = "Amman", Waste = 4500m, Items = 45, Trend = 12.5 },
+                                        new { Gov = "Zarqa", Waste = 3200m, Items = 32, Trend = -8.3 },
+                                        new { Gov = "Irbid", Waste = 2800m, Items = 28, Trend = 5.2 },
+                                        new { Gov = "Balqa", Waste = 1500m, Items = 15, Trend = -15.0 },
+                                        new { Gov = "Mafraq", Waste = 900m, Items = 9, Trend = 3.1 }
+                                    })
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@demo.Gov</td>
+                                            <td>@demo.Waste.ToString("C0")</td>
+                                            <td>@demo.Items</td>
+                                            <td>
+                                                @if (demo.Trend > 0)
+                                                {
+                                                    <span class="text-danger"><i class="bi bi-arrow-up"></i> @demo.Trend%</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-success"><i class="bi bi-arrow-down"></i> @Math.Abs(demo.Trend)%</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2"></i>Transfer Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-medtrack mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Transfers</th>
+                                    <th>Value (JOD)</th>
+                                    <th>Items Saved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var activity in Model.TransferActivity)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@activity.Month</td>
+                                        <td>@activity.TransfersCompleted</td>
+                                        <td>@activity.ValueTransferred.ToString("C0")</td>
+                                        <td>@activity.ItemsSaved</td>
+                                    </tr>
+                                }
+                                @if (!Model.TransferActivity.Any())
+                                {
+                                    @foreach (var demo in new[] {
+                                        new { Month = "Jun 2026", Transfers = 45, Value = 8500m, Items = 320 },
+                                        new { Month = "May 2026", Transfers = 38, Value = 7200m, Items = 280 },
+                                        new { Month = "Apr 2026", Transfers = 42, Value = 9100m, Items = 350 },
+                                        new { Month = "Mar 2026", Transfers = 35, Value = 6500m, Items = 240 },
+                                        new { Month = "Feb 2026", Transfers = 28, Value = 4800m, Items = 190 }
+                                    })
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@demo.Month</td>
+                                            <td>@demo.Transfers</td>
+                                            <td>@demo.Value.ToString("C0")</td>
+                                            <td>@demo.Items</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Governorate Hotspots -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt me-2"></i>Shortage Hotspots</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @foreach (var hotspot in Model.ShortageHotspots)
+                {
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-@(hotspot.Severity == "Critical" ? "danger" : hotspot.Severity == "High" ? "warning" : "info")">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h6 class="fw-bold mb-1">@hotspot.Governorate</h6>
+                                    <span class="badge bg-@(hotspot.Severity == "Critical" ? "danger" : hotspot.Severity == "High" ? "warning text-dark" : "info")">
+                                        @hotspot.Severity
+                                    </span>
+                                </div>
+                                <p class="mb-1"><span class="fw-bold">@hotspot.ActiveShortages</span> active shortages</p>
+                                <p class="text-muted small mb-0">@hotspot.PharmaciesAffected pharmacies affected</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (!Model.ShortageHotspots.Any())
+                {
+                    @foreach (var demo in new[] {
+                        new { Gov = "Zarqa", Shortages = 15, Pharmacies = 8, Severity = "Critical" },
+                        new { Gov = "Amman", Shortages = 12, Pharmacies = 6, Severity = "High" },
+                        new { Gov = "Irbid", Shortages = 8, Pharmacies = 5, Severity = "High" },
+                        new { Gov = "Mafraq", Shortages = 6, Pharmacies = 4, Severity = "Medium" },
+                        new { Gov = "Karak", Shortages = 7, Pharmacies = 3, Severity = "Medium" },
+                        new { Gov = "Balqa", Shortages = 5, Pharmacies = 3, Severity = "Low" },
+                        new { Gov = "Madaba", Shortages = 3, Pharmacies = 2, Severity = "Low" },
+                        new { Gov = "Aqaba", Shortages = 4, Pharmacies = 2, Severity = "Low" }
+                    })
+                    {
+                        <div class="col-md-6 col-lg-3">
+                            <div class="card border-@(demo.Severity == "Critical" ? "danger" : demo.Severity == "High" ? "warning" : "info")">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h6 class="fw-bold mb-1">@demo.Gov</h6>
+                                        <span class="badge bg-@(demo.Severity == "Critical" ? "danger" : demo.Severity == "High" ? "warning text-dark" : "info")">
+                                            @demo.Severity
+                                        </span>
+                                    </div>
+                                    <p class="mb-1"><span class="fw-bold">@demo.Shortages</span> active shortages</p>
+                                    <p class="text-muted small mb-0">@demo.Pharmacies pharmacies affected</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>

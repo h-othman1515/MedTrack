@@ -1,231 +1,425 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using MedTrack.Models.ViewModels
+@using System.Security.Claims
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] — MedTrack Jordan</title>
+    <title>@ViewData["Title"] - MedTrack Jordan</title>
+    <script>
+        (function () {
+            var theme = localStorage.getItem('mt-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
-    @* Page-specific styles injected here *@
+    <!-- Icons & Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="~/css/layout.css" />
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/app-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/medtrack.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/responsive.css" asp-append-version="true" />
+    <link href="~/lib/sweetalert2/sweetalert2.min.css" rel="stylesheet" asp-append-version="true" />
+
     @await RenderSectionAsync("Styles", required: false)
 </head>
+
 <body>
+    @await Html.PartialAsync("_SweetAlertMessages")
 
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm" style="background:#1F4E79;">
-        <div class="container">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <!-- ════════════════════════════════════
+             AUTHENTICATED APP LAYOUT
+        ════════════════════════════════════ -->
+        <partial name="_PillField" />
+        <div class="mt-app">
+            <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
-                <i class="bi bi-capsule fs-5"></i>MedTrack Jordan
-            </a>
+            <!-- ── SIDEBAR ── -->
+            <aside class="mt-sidebar" id="appSidebar">
+                <div class="sidebar-header">
+                    <a href="/" class="sidebar-brand">
+                        <span class="pill-logo"><span></span><span></span></span>
+                        MedTrack
+                    </a>
+                    <button type="button" class="sidebar-close-btn d-lg-none" id="sidebarCloseBtn" aria-label="Close navigation menu">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
 
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#navbarMain"
-                    aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarMain">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Home" asp-action="Index">
-                            <i class="bi bi-house me-1"></i>Home
-                        </a>
-                    </li>
-
-                    @if (User.Identity!.IsAuthenticated)
-                    {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="MedicationBatch" asp-action="Index">
-                                <i class="bi bi-box-seam me-1"></i>Inventory
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="SurplusPost" asp-action="Index">
-                                <i class="bi bi-arrow-left-right me-1"></i>Surplus Board
-                            </a>
-                        </li>
-
-                        @if (User.IsInRole("Admin") || User.IsInRole("PharmacyManager"))
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-gear me-1"></i>Manage
-                                </a>
-                                <ul class="dropdown-menu border-0 shadow-sm">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Pharmacy" asp-action="Index">
-                                            <i class="bi bi-building me-2 text-primary"></i>Pharmacies
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Drug" asp-action="Index">
-                                            <i class="bi bi-capsule me-2 text-primary"></i>Drugs
-                                        </a>
-                                    </li>
-                                    @if (User.IsInRole("Admin"))
-                                    {
-                                        <li><hr class="dropdown-divider" /></li>
-                                        <li>
-                                            <a class="dropdown-item" asp-controller="Admin" asp-action="Users">
-                                                <i class="bi bi-people me-2 text-primary"></i>Users
-                                            </a>
-                                        </li>
-                                    }
-                                </ul>
-                            </li>
-                        }
-
-                        @if (User.IsInRole("Admin") || User.IsInRole("MOHAdmin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Admin" asp-action="Dashboard">
-                                    <i class="bi bi-bar-chart-line me-1"></i>Dashboard
-                                </a>
-                            </li>
-                        }
-
-                        @if (User.IsInRole("Distributor"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="RestockRequest" asp-action="Index">
-                                    <i class="bi bi-truck-front me-1"></i>Restock Requests
-                                </a>
-                            </li>
-                        }
+                <nav class="sidebar-nav">
+                    @{
+                        var ctrl = ViewContext.RouteData.Values["Controller"]?.ToString();
+                        var act = ViewContext.RouteData.Values["Action"]?.ToString();
                     }
 
-                </ul>
-
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                    @if (User.Identity!.IsAuthenticated)
+                    @if (User.IsInRole("System Admin"))
                     {
-                        @* Notification Bell *@
-                        <li class="nav-item me-1">
-                            <a class="nav-link position-relative" asp-controller="Notification" asp-action="Index"
-                               title="Notifications">
-                                <i class="bi bi-bell fs-5"></i>
-                                @* Badge count injected by ViewBag from controller *@
-                                @if (ViewBag.UnreadCount != null && ViewBag.UnreadCount > 0)
-                                {
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                          style="font-size:0.65rem;">
-                                        @ViewBag.UnreadCount
-                                    </span>
-                                }
-                            </a>
-                        </li>
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-                               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="avatar-circle">@(User.Identity.Name?.Substring(0, 1).ToUpper())</span>
-                                <span class="d-none d-md-inline" style="font-size:0.875rem;">@User.Identity.Name</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm">
-                                <li class="px-3 py-2 border-bottom">
-                                    <small class="text-muted d-block">Signed in as</small>
-                                    <strong style="font-size:0.875rem;">@User.Identity.Name</strong>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
-                                        <i class="bi bi-person me-2"></i>My Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
-                                        <i class="bi bi-key me-2"></i>Change Password
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider" /></li>
-                                <li>
-                                    <form asp-controller="Account" asp-action="Logout" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
+                        <div class="sidebar-section-label">Overview</div>
+                        <a href="/Admin" class="sidebar-link @(ctrl == "Admin" && act == "Index" ? "active" : "")">
+                            <i class="bi bi-grid"></i> Dashboard
+                        </a>
+                        <div class="sidebar-section-label">Management</div>
+                        <a href="/Admin/Pharmacies" class="sidebar-link @(ctrl == "Admin" && (act == "Pharmacies" || act == "RegisterPharmacy" || act == "PharmacyDetails") ? "active" : "")"><i class="bi bi-shop"></i> Pharmacies</a>
+                        <a href="/Admin/Users" class="sidebar-link @(ctrl == "Admin" && (act == "Users" || act == "CreateUser" || act == "EditUser") ? "active" : "")"><i class="bi bi-people"></i> Users</a>
+                        <a href="/Admin/Drugs" class="sidebar-link @(ctrl == "Admin" && (act == "Drugs" || act == "AddDrug" || act == "EditDrug") || ctrl == "Drug" ? "active" : "")"><i class="bi bi-capsule-pill"></i> Medications</a>
+                        <div class="sidebar-section-label">System</div>
+                        <a href="/Admin/Notifications" class="sidebar-link @(ctrl == "Admin" && (act == "Notifications" || act == "NotificationHistory") ? "active" : "")"><i class="bi bi-bell"></i> Broadcast <span class="sidebar-badge" id="alertBadge">3</span></a>
+                        <a href="/Admin/AuditLogs" class="sidebar-link @(ctrl == "Admin" && act == "AuditLogs" ? "active" : "")"><i class="bi bi-journal-text"></i> Audit Logs</a>
+                        <a href="/Admin/Settings" class="sidebar-link @(ctrl == "Admin" && act == "Settings" ? "active" : "")"><i class="bi bi-gear"></i> Settings</a>
+                    }
+                    else if (User.IsInRole("MOH Admin"))
+                    {
+                        <div class="sidebar-section-label">Overview</div>
+                        <a href="/MOH/Dashboard" class="sidebar-link @(ctrl == "MOH" && act == "Dashboard" ? "active" : "")"><i class="bi bi-grid"></i> National Dashboard</a>
+                        <div class="sidebar-section-label">Analytics</div>
+                        <a href="/MOH/Shortages" class="sidebar-link @(ctrl == "MOH" && act == "Shortages" ? "active" : "")"><i class="bi bi-exclamation-triangle"></i> Shortage Map</a>
+                        <a href="/MOH/Analytics" class="sidebar-link @(ctrl == "MOH" && act == "Analytics" ? "active" : "")"><i class="bi bi-clock-history"></i> Analytics</a>
+                        <a href="/MOH/Pharmacies" class="sidebar-link @(ctrl == "MOH" && act == "Pharmacies" ? "active" : "")"><i class="bi bi-shop"></i> Pharmacies</a>
+                        <a href="/MOH/Reports" class="sidebar-link @(ctrl == "MOH" && act == "Reports" ? "active" : "")"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
+                        <div class="sidebar-section-label">Settings</div>
+                        <a href="/Account/Settings" class="sidebar-link @(ctrl == "Account" && act == "Settings" ? "active" : "")"><i class="bi bi-gear"></i> Settings</a>
+                    }
+                    else if (User.IsInRole("Distributor"))
+                    {
+                        <div class="sidebar-section-label">Overview</div>
+                        <a href="/Distributor" class="sidebar-link @(ctrl == "Distributor" && act == "Index" ? "active" : "")"><i class="bi bi-grid"></i> Dashboard</a>
+                        <div class="sidebar-section-label">Operations</div>
+                        <a href="/Distributor/RestockRequests" class="sidebar-link @(ctrl == "Distributor" && act == "RestockRequests" ? "active" : "")"><i class="bi bi-inbox"></i> Restock Requests <span class="sidebar-badge" id="alertBadge">3</span></a>
+                        <a href="/Distributor/Analytics" class="sidebar-link @(ctrl == "Distributor" && act == "Analytics" ? "active" : "")"><i class="bi bi-graph-up"></i> Demand View</a>
+                        <a href="/Distributor/Deliveries" class="sidebar-link @(ctrl == "Distributor" && act == "Deliveries" ? "active" : "")"><i class="bi bi-truck"></i> Deliveries</a>
+                        <div class="sidebar-section-label">Settings</div>
+                        <a href="/Account/Settings" class="sidebar-link @(ctrl == "Account" && act == "Settings" ? "active" : "")"><i class="bi bi-gear"></i> Settings</a>
                     }
                     else
                     {
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Account" asp-action="Login">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>Login
-                            </a>
-                        </li>
-                        <li class="nav-item ms-2">
-                            <a class="btn btn-light btn-sm px-3 fw-semibold" asp-controller="Account" asp-action="Register">
-                                Register
-                            </a>
-                        </li>
+                        <div class="sidebar-section-label">Overview</div>
+                        <a href="/Dashboard" class="sidebar-link @(ctrl == "Dashboard" ? "active" : "")"><i class="bi bi-grid"></i> Dashboard</a>
+                        <div class="sidebar-section-label">Inventory</div>
+                        <a href="/Inventory" class="sidebar-link @(ctrl == "Inventory" && act == "Index" ? "active" : "")"><i class="bi bi-box-seam"></i> Inventory</a>
+                        <a href="/Inventory/Create" class="sidebar-link @(ctrl == "Inventory" && act == "Create" ? "active" : "")"><i class="bi bi-plus-circle"></i> Add Stock</a>
+                        <a href="/Inventory/Import" class="sidebar-link @(ctrl == "Inventory" && act == "Import" ? "active" : "")"><i class="bi bi-upload"></i> Import CSV</a>
+                        <div class="sidebar-section-label">Marketplace</div>
+                        <a href="/Surplus" class="sidebar-link @(ctrl == "Surplus" ? "active" : "")"><i class="bi bi-shop-window"></i> Browse Surplus</a>
+                        <a href="/SurplusPost/MyPosts" class="sidebar-link @(ctrl == "SurplusPost" && act == "MyPosts" ? "active" : "")"><i class="bi bi-tags"></i> My Listings</a>
+                        <div class="sidebar-section-label">Alerts</div>
+                        <a href="/Alerts" class="sidebar-link @(ctrl == "Alerts" ? "active" : "")"><i class="bi bi-bell"></i> Alerts <span class="sidebar-badge" id="alertBadge">3</span></a>
+                        <a href="/Transfer" class="sidebar-link @(ctrl == "Transfer" ? "active" : "")"><i class="bi bi-arrow-left-right"></i> Transfers</a>
+                        <div class="sidebar-section-label">Account</div>
+                        <a href="/Account/Profile" class="sidebar-link @(ctrl == "Account" && act == "Profile" ? "active" : "")"><i class="bi bi-person-circle"></i> Profile</a>
+                        <a href="/Account/Settings" class="sidebar-link @(ctrl == "Account" && act == "Settings" ? "active" : "")"><i class="bi bi-gear"></i> Settings</a>
                     }
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    @* ── Alert toasts ────────────────────────────────────────────────────────────── *@
-    @if (TempData["Success"] != null)
-    {
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
-            <div class="toast show align-items-center text-bg-success border-0 shadow" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+                </nav>
+
+                <!-- Sidebar user card -->
+                <div class="sidebar-footer">
+                    <div class="sidebar-user-card">
+                        <div class="avatar">@(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")</div>
+                        <div>
+                            <div class="sidebar-user-name">@(User.Identity?.Name ?? "User")</div>
+                            <div>
+                                @if (User.IsInRole("System Admin"))
+                                {
+                                    <span class="role-badge role-admin">Admin</span>
+                                }
+                                else if (User.IsInRole("MOH Admin"))
+                                {
+
+                                    <span class="role-badge role-moh">MOH</span>
+                                }
+                                else if (User.IsInRole("Distributor"))
+                                {
+
+                                    <span class="role-badge role-distributor">Distributor</span>
+                                }
+                                else
+                                {
+
+                                    <span class="role-badge role-pharmacy">Pharmacy</span>
+                                }
+                            </div>
+                        </div>
+                        <i class="bi bi-three-dots-vertical sidebar-user-arrow"></i>
                     </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </aside>
+
+            <!-- ── MAIN CONTENT WRAP ── -->
+            <div class="mt-content-wrap" id="contentWrap">
+
+                <!-- Top bar -->
+                <header class="mt-topbar">
+                    <button type="button" class="topbar-menu-btn" id="sidebarMenuBtn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="appSidebar">
+                        <i class="bi bi-list"></i>
+                    </button>
+
+                    <!-- breadcrumb -->
+                    <div class="topbar-breadcrumb d-none d-md-flex">
+                        <i class="bi bi-capsule-pill" style="color:var(--mt-teal)"></i>
+                        <span>@(ViewData["Title"] ?? "Dashboard")</span>
+                    </div>
+
+                    <div class="topbar-right">
+                        <!-- Search -->
+                        <div class="topbar-search">
+                            <i class="bi bi-search"></i>
+                            <input type="text" placeholder="Search medications…" />
+                        </div>
+
+                        <!-- Theme toggle -->
+                        <partial name="_ThemeToggle" />
+
+                        <!-- Notifications -->
+                        <div style="position:relative">
+                            <button class="topbar-bell" id="notifBtn" aria-label="Notifications">
+                                <i class="bi bi-bell"></i>
+                                <span class="topbar-bell__badge" id="notifCount">3</span>
+                            </button>
+                            <div class="notif-dropdown" id="notifDropdown">
+                                <div class="notif-dropdown__head">
+                                    Notifications <a href="/Alerts">View all</a>
+                                </div>
+                                <div class="notif-item">
+                                    <span class="notif-dot" style="background:var(--mt-red)"></span>
+                                    <div>
+                                        <div class="notif-title">Expiry Alert</div>
+                                        <div class="notif-body">Amoxicillin 500mg expires in 7 days</div>
+                                        <div class="notif-time">2 minutes ago</div>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <span class="notif-dot" style="background:var(--mt-amber)"></span>
+                                    <div>
+                                        <div class="notif-title">Low Stock Warning</div>
+                                        <div class="notif-body">Metformin is below minimum threshold</div>
+                                        <div class="notif-time">1 hour ago</div>
+                                    </div>
+                                </div>
+                                <div class="notif-item">
+                                    <span class="notif-dot" style="background:var(--mt-teal)"></span>
+                                    <div>
+                                        <div class="notif-title">Transfer Completed</div>
+                                        <div class="notif-body">Surplus Ibuprofen 400mg transfer confirmed</div>
+                                        <div class="notif-time">3 hours ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User menu -->
+                        <div class="topbar-user-wrap">
+                            <button class="topbar-user" id="userBtn">
+                                <div class="avatar" style="width:30px;height:30px;font-size:.72rem">
+                                    @(User.Identity?.Name?.Substring(0, 1).ToUpper() ?? "U")
+                                </div>
+                                <span class="topbar-user-name">@(User.Identity?.Name ?? "User")</span>
+                                <i class="bi bi-chevron-down topbar-user-chevron"></i>
+                            </button>
+                            <div class="user-dropdown" id="userDropdown">
+                                <div class="user-dropdown__info">
+                                    <div class="user-dropdown__name">@(User.Identity?.Name ?? "User")</div>
+                                    <div class="user-dropdown__email">@(User.FindFirst(ClaimTypes.Email)?.Value ?? "")</div>
+                                </div>
+                                <div class="user-dropdown__links">
+                                    <a href="/Account/Profile" class="user-dropdown__link"><i class="bi bi-person"></i> Profile</a>
+                                    <a href="/Account/Settings" class="user-dropdown__link"><i class="bi bi-gear"></i> Settings</a>
+                                    <div class="user-dropdown__divider"></div>
+                                    <form method="post" asp-controller="Account" asp-action="Logout" style="margin:0">
+                                        <button type="submit" class="user-dropdown__link danger" style="width:100%;background:none;border:none;text-align:left;cursor:pointer;font-family:inherit">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Page content -->
+                <main class="mt-page">
+                    @RenderBody()
+                </main>
+
+                <!-- App footer -->
+                <footer class="mt-app-footer">
+                    <div class="mt-app-footer__pill">
+                        <span class="pill-logo" style="width:22px;height:11px"><span></span><span></span></span>
+                        MedTrack Jordan
+                    </div>
+                    <div>Orange Internship 2025 &nbsp;·&nbsp; Built with ASP.NET Core 8</div>
+                </footer>
+
+            </div><!-- /mt-content-wrap -->
+        </div>
+    
+        <!-- /mt-app -->
+    }
+    else
+    {
+        var homeTheme = ViewData["HomeTheme"] as bool? == true;
+        if (homeTheme)
+        {
+            @RenderBody()
+        }
+        else
+        {
+        <partial name="_PillField" />
+        <partial name="_PublicNav" />
+
+        <main class="pub-main mt-public-page">
+            @RenderBody()
+        </main>
+
+        <!-- Public footer -->
+        <footer class="mt-pub-footer">
+            <div class="mt-pub-footer__inner">
+                <div>
+                    <div class="footer-brand">
+                        <span class="pill-logo"><span></span><span></span></span>
+                        MedTrack Jordan
+                    </div>
+                    <p class="footer-tagline">Smart medication inventory and shortage tracking for Jordan's pharmaceutical sector.</p>
+                </div>
+                <div>
+                    <div class="footer-col-h">Platform</div>
+                    <ul class="footer-col-links">
+                        <li><a href="/Home/Features">Features</a></li>
+                        <li><a href="/Home/About">About</a></li>
+                        <li><a href="/Account/Register">Register</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-h">For</div>
+                    <ul class="footer-col-links">
+                        <li><a href="#">Community Pharmacies</a></li>
+                        <li><a href="#">Hospital Pharmacies</a></li>
+                        <li><a href="#">Distributors</a></li>
+                        <li><a href="#">Ministry of Health</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    }
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
-            <div class="toast show align-items-center text-bg-danger border-0 shadow" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
+            <div class="footer-bottom">
+                <span>© 2025 MedTrack Jordan — Orange Internship</span>
+                <span>Built with ASP.NET Core 8</span>
             </div>
-        </div>
+        </footer>
+        }
     }
 
-    @* ── Page body ───────────────────────────────────────────────────────────────── *@
-    <main>
-        @RenderBody()
-    </main>
-
-    <footer class="border-top py-3 mt-5 bg-light">
-        <div class="container text-center">
-            <small class="text-muted">
-                MedTrack Jordan &copy; @DateTime.Now.Year &nbsp;|&nbsp;
-                Orange Internship 2025 &nbsp;|&nbsp;
-                Built with ASP.NET Core 8
-            </small>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- ════════════════════════════════════
+         SCRIPTS
+    ════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="~/js/theme.js" asp-append-version="true"></script>
+    <script src="~/lib/sweetalert2/sweetalert2.all.min.js" asp-append-version="true"></script>
+    <script src="~/js/swal-helpers.js" asp-append-version="true"></script>
+    <script src="~/js/medtrack.js" asp-append-version="true"></script>
 
     <script>
-        // Auto-dismiss toasts after 4 s
-        document.querySelectorAll('.toast').forEach(t => {
-            setTimeout(() => {
-                const toast = bootstrap.Toast.getOrCreateInstance(t);
-                toast.hide();
-            }, 4000);
-        });
+        (function(){
+          /* Theme toggle → wwwroot/js/theme.js (event delegation) */
+
+          /* ── Mobile sidebar drawer ── */
+          var sidebar    = document.getElementById('appSidebar');
+          var sidebarBtn = document.getElementById('sidebarMenuBtn');
+          var overlay    = document.getElementById('sidebarOverlay');
+
+          function closeSidebar(){
+            if(!sidebar) return;
+            sidebar.classList.remove('open');
+            overlay && overlay.classList.remove('active');
+            document.body.classList.remove('sidebar-open');
+            sidebarBtn && sidebarBtn.setAttribute('aria-expanded', 'false');
+          }
+
+          function openSidebar(){
+            if(!sidebar) return;
+            sidebar.classList.add('open');
+            overlay && overlay.classList.add('active');
+            document.body.classList.add('sidebar-open');
+            sidebarBtn && sidebarBtn.setAttribute('aria-expanded', 'true');
+          }
+
+          if(sidebarBtn && sidebar){
+            sidebarBtn.addEventListener('click', function(e){
+              e.stopPropagation();
+              sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+            });
+          }
+          var sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
+          if(sidebarCloseBtn){
+            sidebarCloseBtn.addEventListener('click', function(e){
+              e.stopPropagation();
+              closeSidebar();
+            });
+          }
+          if(overlay){
+            overlay.addEventListener('click', closeSidebar);
+          }
+          if(sidebar){
+            sidebar.querySelectorAll('.sidebar-link').forEach(function(link){
+              link.addEventListener('click', function(){
+                if(window.matchMedia('(max-width: 991.98px)').matches) closeSidebar();
+              });
+            });
+          }
+          window.addEventListener('resize', function(){
+            if(window.innerWidth >= 992) closeSidebar();
+          });
+
+          /* ── Notification dropdown ── */
+          var notifBtn  = document.getElementById('notifBtn');
+          var notifDrop = document.getElementById('notifDropdown');
+          if(notifBtn && notifDrop){
+            notifBtn.addEventListener('click', function(e){ e.stopPropagation(); notifDrop.classList.toggle('open'); userDrop && userDrop.classList.remove('open'); });
+          }
+
+          /* ── User dropdown ── */
+          var userBtn  = document.getElementById('userBtn');
+          var userDrop = document.getElementById('userDropdown');
+          if(userBtn && userDrop){
+            userBtn.addEventListener('click', function(e){ e.stopPropagation(); userDrop.classList.toggle('open'); notifDrop && notifDrop.classList.remove('open'); });
+          }
+
+          /* Close dropdowns on outside click */
+          document.addEventListener('click', function(){
+            notifDrop && notifDrop.classList.remove('open');
+            userDrop  && userDrop.classList.remove('open');
+          });
+
+          /* ── Mobile public nav burger ── */
+          var burger   = document.getElementById('navBurger');
+          var pubLinks = document.getElementById('pubNavLinks');
+          if(burger && pubLinks){
+            burger.addEventListener('click', function(){ pubLinks.classList.toggle('open'); });
+          }
+
+          /* ── Scroll reveal (public pages) ── */
+          if('IntersectionObserver' in window){
+            var obs = new IntersectionObserver(function(entries){
+              entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(function(el){ obs.observe(el); });
+          }
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)

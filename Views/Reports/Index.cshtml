@@ -1,0 +1,81 @@
+@model MedTrack.Models.ViewModels.WasteReportViewModel
+@{
+    ViewData["Title"] = "Waste Reports";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-graph-up me-2"></i>Waste Reports</h2>
+            <p class="text-muted mb-0">
+                Period: @Model.PeriodStart.ToString("yyyy-MM-dd") &ndash; @Model.PeriodEnd.ToString("yyyy-MM-dd")
+            </p>
+        </div>
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Print / Export
+        </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card bg-danger bg-opacity-10">
+                <div class="card-body">
+                    <p class="text-muted small text-uppercase mb-1">Total Waste Value</p>
+                    <h3 class="fw-bold mb-0">@Model.TotalWasteValue.ToString("N0") JOD</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-warning bg-opacity-10">
+                <div class="card-body">
+                    <p class="text-muted small text-uppercase mb-1">Items Wasted</p>
+                    <h3 class="fw-bold mb-0">@Model.TotalItemsWasted</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0">Wasted Items Breakdown</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Batch</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total Value</th>
+                            <th>Expiry</th>
+                            <th>Disposal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@item.DrugName</td>
+                                <td><code>@item.BatchNo</code></td>
+                                <td>@item.Quantity</td>
+                                <td>@item.UnitPrice.ToString("N2")</td>
+                                <td>@item.TotalValue.ToString("N2")</td>
+                                <td>@item.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                                <td>@item.DisposalMethod</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (!Model.Items.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-check-circle fs-1 text-success"></i>
+                    <p class="mt-2 mb-0">No waste recorded for this period.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

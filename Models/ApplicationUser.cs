@@ -1,16 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
-namespace MedTrackJordan.Models
+namespace MedTrack.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        [MaxLength(200)]
-        public string? FullName { get; set; }
-
+        public string FullName { get; set; } = string.Empty;
         public int? PharmacyId { get; set; }
-
-        // Navigation property
         public Pharmacy? Pharmacy { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActive { get; set; } = true;
     }
 }

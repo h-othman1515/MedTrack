@@ -1,29 +1,35 @@
-using MedTrack.Models;
-using MedTrackJordan.Models;
-using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
+using MedTrack.Models;
+using MedTrack.Models.ViewModels;
 
-namespace MedTrackJordan.Controllers
+namespace MedTrack.Controllers
 {
     public class HomeController : Controller
     {
         public IActionResult Index()
         {
-            if (User.Identity?.IsAuthenticated == true)
-                return RedirectToAction("Dashboard", "Admin");
-
-            return View();
+            var model = new HomePageViewModel
+            {
+                RegisteredPharmacies = 156,
+                MedicationsTracked = 12450,
+                WastePrevented = 87500,
+                ShortagesResolved = 342
+            };
+            return View(model);
         }
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        public IActionResult About() => View();
+        public IActionResult Features() => View();
+        public IActionResult Privacy() => View();
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return View(new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+            });
         }
     }
 }

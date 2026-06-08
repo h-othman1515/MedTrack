@@ -1,178 +1,96 @@
-﻿using MedTrackJordan.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Reflection.Emit;
+using MedTrack.Models;
 
-namespace MedTrackJordan.Data
+namespace MedTrack.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-            : base(options)
-        {
-        }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-        public DbSet<Pharmacy> Pharmacies { get; set; }
-        public DbSet<Drug> Drugs { get; set; }
-        public DbSet<MedicationBatch> MedicationBatches { get; set; }
-        public DbSet<ExpiryAlert> ExpiryAlerts { get; set; }
-        public DbSet<SurplusPost> SurplusPosts { get; set; }
-        public DbSet<TransferRequest> TransferRequests { get; set; }
-        public DbSet<Notification> Notifications { get; set; }
-        public DbSet<RestockRequest> RestockRequests { get; set; }
+        public DbSet<Pharmacy> Pharmacies => Set<Pharmacy>();
+        public DbSet<Drug> Drugs => Set<Drug>();
+        public DbSet<MedicationBatch> MedicationBatches => Set<MedicationBatch>();
+        public DbSet<ExpiryAlert> ExpiryAlerts => Set<ExpiryAlert>();
+        public DbSet<SurplusPost> SurplusPosts => Set<SurplusPost>();
+        public DbSet<TransferRequest> TransferRequests => Set<TransferRequest>();
+        public DbSet<RestockRequest> RestockRequests => Set<RestockRequest>();
+        public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // ── Pharmacy ────────────────────────────────────────────────
-            builder.Entity<Pharmacy>(entity =>
+            builder.Entity<Pharmacy>(e =>
             {
-                entity.HasIndex(p => p.LicenseNo).IsUnique();
-
-                entity.Property(p => p.Name).IsRequired().HasMaxLength(200);
-                entity.Property(p => p.LicenseNo).IsRequired().HasMaxLength(100);
-                entity.Property(p => p.Governorate).IsRequired().HasMaxLength(100);
-                entity.Property(p => p.Address).HasMaxLength(300);
-                entity.Property(p => p.ContactEmail).HasMaxLength(200);
-                entity.Property(p => p.Phone).HasMaxLength(20);
+                e.HasIndex(p => p.LicenseNo).IsUnique();
+                e.HasIndex(p => p.Governorate);
+                e.HasIndex(p => p.IsApproved);
             });
 
-            // ── Drug ─────────────────────────────────────────────────────
-            builder.Entity<Drug>(entity =>
+            builder.Entity<Drug>(e =>
             {
-                entity.Property(d => d.GenericName).IsRequired().HasMaxLength(200);
-                entity.Property(d => d.Category).HasMaxLength(100);
-                entity.Property(d => d.Unit).HasMaxLength(50);
-                entity.Property(d => d.MinStockLevel).HasDefaultValue(0);
+                e.HasIndex(d => d.GenericName);
+                e.HasIndex(d => d.Category);
+                e.HasIndex(d => d.IsActive);
             });
 
-            // ── ApplicationUser → Pharmacy ───────────────────────────────
-            builder.Entity<ApplicationUser>(entity =>
+            builder.Entity<MedicationBatch>(e =>
             {
-                entity.Property(u => u.FullName).HasMaxLength(200);
-
-                entity.HasOne(u => u.Pharmacy)
-                      .WithMany(p => p.Users)
-                      .HasForeignKey(u => u.PharmacyId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                e.HasIndex(b => b.PharmacyId);
+                e.HasIndex(b => b.DrugId);
+                e.HasIndex(b => b.ExpiryDate);
+                e.HasIndex(b => b.Quantity);
             });
 
-            // ── MedicationBatch ──────────────────────────────────────────
-            builder.Entity<MedicationBatch>(entity =>
+            builder.Entity<ExpiryAlert>(e =>
             {
-                entity.Property(b => b.BatchNo).HasMaxLength(100);
-                entity.Property(b => b.AddedAt).HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasOne(b => b.Pharmacy)
-                      .WithMany(p => p.MedicationBatches)
-                      .HasForeignKey(b => b.PharmacyId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(b => b.Drug)
-                      .WithMany(d => d.MedicationBatches)
-                      .HasForeignKey(b => b.DrugId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(a => a.BatchId);
+                e.HasIndex(a => a.AlertLevel);
+                e.HasIndex(a => a.IsAcknowledged);
             });
 
-            // ── ExpiryAlert ──────────────────────────────────────────────
-            builder.Entity<ExpiryAlert>(entity =>
+            builder.Entity<SurplusPost>(e =>
             {
-                entity.Property(a => a.AlertLevel)
-                      .HasConversion<int>();
-
-                entity.Property(a => a.Channel)
-                      .HasConversion<string>()
-                      .HasMaxLength(20);
-
-                entity.Property(a => a.IsAcknowledged).HasDefaultValue(false);
-
-                entity.HasOne(a => a.MedicationBatch)
-                      .WithMany(b => b.ExpiryAlerts)
-                      .HasForeignKey(a => a.BatchId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(s => s.PharmacyId);
+                e.HasIndex(s => s.DrugId);
+                e.HasIndex(s => s.Status);
+                e.HasIndex(s => s.PostedAt);
             });
 
-            // ── SurplusPost ──────────────────────────────────────────────
-            builder.Entity<SurplusPost>(entity =>
+            builder.Entity<TransferRequest>(e =>
             {
-                entity.Property(s => s.Status)
-                      .HasConversion<string>()
-                      .HasMaxLength(20);
+                e.HasIndex(t => t.SurplusPostId);
+                e.HasIndex(t => t.RequestingPharmacyId);
+                e.HasIndex(t => t.Status);
 
-                entity.Property(s => s.PostedAt).HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasOne(s => s.Pharmacy)
-                      .WithMany(p => p.SurplusPosts)
-                      .HasForeignKey(s => s.PharmacyId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(s => s.Drug)
-                      .WithMany(d => d.SurplusPosts)
-                      .HasForeignKey(s => s.DrugId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                // FIX: Break multiple cascade paths from Pharmacies to TransferRequests
+                e.HasOne(t => t.RequestingPharmacy)
+                 .WithMany() // Adjust to .WithMany(p => p.TransferRequests) if your Pharmacy model has that collection property
+                 .HasForeignKey(t => t.RequestingPharmacyId)
+                 .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // ── TransferRequest ──────────────────────────────────────────
-            builder.Entity<TransferRequest>(entity =>
+            builder.Entity<RestockRequest>(e =>
             {
-                entity.Property(t => t.Status)
-                      .HasConversion<string>()
-                      .HasMaxLength(20);
-
-                entity.Property(t => t.RequestedAt).HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasOne(t => t.SurplusPost)
-                      .WithMany(s => s.TransferRequests)
-                      .HasForeignKey(t => t.SurplusPostId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                // NoAction to avoid multiple cascade paths from Pharmacy
-                entity.HasOne(t => t.RequestingPharmacy)
-                      .WithMany(p => p.TransferRequests)
-                      .HasForeignKey(t => t.RequestingPharmacyId)
-                      .OnDelete(DeleteBehavior.NoAction);
+                e.HasIndex(r => r.PharmacyId);
+                e.HasIndex(r => r.DrugId);
+                e.HasIndex(r => r.Status);
             });
 
-            // ── Notification ─────────────────────────────────────────────
-            builder.Entity<Notification>(entity =>
+            builder.Entity<Notification>(e =>
             {
-                entity.Property(n => n.Type)
-                      .HasConversion<string>()
-                      .HasMaxLength(30);
-
-                entity.Property(n => n.Channel)
-                      .HasConversion<string>()
-                      .HasMaxLength(20);
-
-                entity.Property(n => n.Message).HasMaxLength(1000);
-                entity.Property(n => n.SentAt).HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasOne(n => n.Pharmacy)
-                      .WithMany(p => p.Notifications)
-                      .HasForeignKey(n => n.PharmacyId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(n => n.PharmacyId);
+                e.HasIndex(n => n.IsRead);
+                e.HasIndex(n => n.SentAt);
             });
 
-            // ── RestockRequest ───────────────────────────────────────────
-            builder.Entity<RestockRequest>(entity =>
+            builder.Entity<AuditLog>(e =>
             {
-                entity.Property(r => r.Status)
-                      .HasConversion<string>()
-                      .HasMaxLength(20);
-
-                entity.Property(r => r.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
-
-                entity.HasOne(r => r.Pharmacy)
-                      .WithMany(p => p.RestockRequests)
-                      .HasForeignKey(r => r.PharmacyId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(r => r.Drug)
-                      .WithMany(d => d.RestockRequests)
-                      .HasForeignKey(r => r.DrugId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                e.HasIndex(a => a.Timestamp);
+                e.HasIndex(a => a.UserId);
+                e.HasIndex(a => a.EntityType);
             });
         }
     }

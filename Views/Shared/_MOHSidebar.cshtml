@@ -1,0 +1,53 @@
+<nav id="sidebar" class="bg-white shadow-sm">
+    <div class="sidebar-header p-3 border-bottom">
+        <a href="/MOH/Dashboard" class="d-flex align-items-center text-decoration-none">
+            <div class="brand-icon bg-primary text-white rounded-3 p-2 me-2">
+                <i class="bi bi-capsule-pill fs-4"></i>
+            </div>
+            <div>
+                <h5 class="mb-0 fw-bold text-primary">MedTrack</h5>
+                <small class="text-muted">MOH Portal</small>
+            </div>
+        </a>
+    </div>
+
+    <ul class="list-unstyled components p-3">
+        <li class="mb-1">
+            <a href="/MOH/Dashboard" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                <i class="bi bi-speedometer2 me-2"></i>National Dashboard
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/MOH/Shortages" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Shortages" ? "active" : "")">
+                <i class="bi bi-exclamation-triangle me-2"></i>Shortage Map
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/MOH/Analytics" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Analytics" ? "active" : "")">
+                <i class="bi bi-graph-up me-2"></i>Analytics
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/MOH/Pharmacies" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Pharmacies" ? "active" : "")">
+                <i class="bi bi-shop me-2"></i>Pharmacies
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/MOH/Reports" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Reports" ? "active" : "")">
+                <i class="bi bi-file-earmark-text me-2"></i>Export Reports
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer p-3 border-top mt-auto">
+        <div class="d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-2">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+                <small class="d-block fw-bold">MOH Admin</small>
+                <small class="text-muted">National View</small>
+            </div>
+        </div>
+    </div>
+</nav>

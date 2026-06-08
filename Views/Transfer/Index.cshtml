@@ -1,0 +1,197 @@
+@model List<MedTrack.Models.ViewModels.TransferRequestViewModel>
+@{
+    ViewData["Title"] = "Transfers";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-arrow-left-right me-2"></i>Transfer Requests</h2>
+            <p class="text-muted mb-0">Track medication transfers between pharmacies</p>
+        </div>
+        <a href="/Surplus" class="btn btn-primary">
+            <i class="bi bi-search me-1"></i>Browse Surplus
+        </a>
+    </div>
+
+    <!-- Transfer Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Pending Requests</p>
+                            <h3 class="fw-bold mb-0">@(Model.Count(t => t.Status == "Pending"))</h3>
+                            <small class="text-primary">Awaiting approval</small>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">In Progress</p>
+                            <h3 class="fw-bold mb-0">@(Model.Count(t => t.Status == "Confirmed" || t.Status == "InTransit"))</h3>
+                            <small class="text-warning">Confirmed or in transit</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Completed</p>
+                            <h3 class="fw-bold mb-0">@(Model.Count(t => t.Status == "Completed"))</h3>
+                            <small class="text-success">Successfully delivered</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Cancelled</p>
+                            <h3 class="fw-bold mb-0">@(Model.Count(t => t.Status == "Cancelled"))</h3>
+                            <small class="text-danger">Withdrawn requests</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-x-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfers Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0 datatable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Drug</th>
+                            <th>Quantity</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transfer in Model)
+                        {
+                            <tr>
+                                <td><code>#@transfer.Id</code></td>
+                                <td>
+                                    <div class="fw-bold">@transfer.DrugName</div>
+                                </td>
+                                <td>@transfer.Quantity units</td>
+                                <td>
+                                    <div class="fw-bold">@transfer.FromPharmacy</div>
+                                    <small class="text-muted">@transfer.FromGovernorate</small>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">@transfer.ToPharmacy</div>
+                                    <small class="text-muted">@transfer.ToGovernorate</small>
+                                </td>
+                                <td>
+                                    @switch (transfer.Status)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-primary">Pending</span>
+                                            break;
+                                        case "Confirmed":
+                                            <span class="badge bg-info">Confirmed</span>
+                                            break;
+                                        case "InTransit":
+                                            <span class="badge bg-warning text-dark">In Transit</span>
+                                            break;
+                                        case "Completed":
+                                            <span class="badge bg-success">Completed</span>
+                                            break;
+                                        case "Cancelled":
+                                            <span class="badge bg-secondary">Cancelled</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @transfer.RequestedAt.ToString("MMM dd, yyyy")
+                                    @if (transfer.CompletedAt.HasValue)
+                                    {
+                                        <br><small class="text-success">Completed @transfer.CompletedAt.Value.ToString("MMM dd")</small>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Transfer/Details/@transfer.Id" class="btn btn-outline-primary" data-bs-toggle="tooltip" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (transfer.Status == "Pending")
+                                        {
+                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@transfer.Id" />
+                                                <input type="hidden" name="status" value="Confirmed" />
+                                                <button type="submit" class="btn btn-outline-success" data-bs-toggle="tooltip" title="Approve">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@transfer.Id" />
+                                                <input type="hidden" name="status" value="Cancelled" />
+                                                <button type="submit" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="Cancel">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        @if (transfer.Status == "InTransit")
+                                        {
+                                            <form asp-action="UpdateStatus" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@transfer.Id" />
+                                                <input type="hidden" name="status" value="Completed" />
+                                                <button type="submit" class="btn btn-outline-success" data-bs-toggle="tooltip" title="Mark Complete">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-truck fs-1 d-block mb-2"></i>
+                                    No transfer requests yet. <a href="/Surplus">Browse surplus stock</a> to get started.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

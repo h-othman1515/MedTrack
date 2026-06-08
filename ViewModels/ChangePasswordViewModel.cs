@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MedTrackJordan.ViewModels
+namespace MedTrack.Models.ViewModels
 {
     public class ChangePasswordViewModel
     {

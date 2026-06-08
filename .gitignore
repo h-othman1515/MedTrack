@@ -482,3 +482,8 @@ $RECYCLE.BIN/
 *.swp
 appsettings.json
 appsettings.Development.json
+
+# Local SQLite database (dev only)
+medtrack.db
+medtrack.db-shm
+medtrack.db-wal

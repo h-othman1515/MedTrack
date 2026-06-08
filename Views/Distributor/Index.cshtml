@@ -1,0 +1,278 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Distributor Portal";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-grid me-2"></i>Distributor Portal</h2>
+            <p class="text-muted mb-0">Aggregated demand view and restock request management</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Distributor/RestockRequests" class="btn btn-primary">
+                <i class="bi bi-inbox me-1"></i>View Requests
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card orange">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Pending Requests</p>
+                            <h3 class="fw-bold mb-0">@Model.PendingRestockRequests</h3>
+                            <small class="text-orange" style="color: #ff7900;">Awaiting confirmation</small>
+                        </div>
+                        <div class="stat-icon bg-orange bg-opacity-10 text-orange" style="background: rgba(255, 121, 0, 0.1); color: #ff7900;">
+                            <i class="bi bi-inbox"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Confirmed Deliveries</p>
+                            <h3 class="fw-bold mb-0">@Model.ConfirmedDeliveries</h3>
+                            <small class="text-success">This month</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Governorates Served</p>
+                            <h3 class="fw-bold mb-0">@(Model.RegionalDemand?.Select(r => r.Governorate).Distinct().Count() ?? 8)</h3>
+                            <small class="text-info">Active regions</small>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Regional Demand Table -->
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-graph-up me-2"></i>Regional Demand Overview</h5>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" style="width: 150px;">
+                    <option>All Drugs</option>
+                    <option>Antibiotics</option>
+                    <option>Diabetes</option>
+                    <option>Cardiovascular</option>
+                </select>
+                <button class="btn btn-sm btn-outline-secondary" onclick="exportTableToCSV('demandTable', 'regional_demand.csv')">
+                    <i class="bi bi-download"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0 datatable" id="demandTable">
+                    <thead>
+                        <tr>
+                            <th>Governorate</th>
+                            <th>Drug</th>
+                            <th>Pharmacies Below Min</th>
+                            <th>Total Needed</th>
+                            <th>Current Stock</th>
+                            <th>Urgency</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var demand in Model.RegionalDemand)
+                        {
+                            <tr>
+                                <td class="fw-bold">@demand.Governorate</td>
+                                <td>@demand.DrugName</td>
+                                <td><span class="badge bg-danger">@demand.PharmaciesBelowMin</span></td>
+                                <td class="fw-bold">@demand.TotalQuantityNeeded</td>
+                                <td>@demand.CurrentRegionalStock</td>
+                                <td>
+                                    <span class="badge bg-@(demand.Urgency == "High" ? "danger" : demand.Urgency == "Medium" ? "warning text-dark" : "info")">
+                                        @demand.Urgency
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/Distributor/RestockRequests?governorate=@demand.Governorate" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.RegionalDemand.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Gov = "Zarqa", Drug = "Insulin Glargine", Pharmacies = 8, Needed = 450, Stock = 120, Urgency = "High" },
+                                new { Gov = "Amman", Drug = "Amoxicillin 500mg", Pharmacies = 6, Needed = 320, Stock = 200, Urgency = "High" },
+                                new { Gov = "Irbid", Drug = "Metformin 850mg", Pharmacies = 5, Needed = 280, Stock = 150, Urgency = "Medium" },
+                                new { Gov = "Mafraq", Drug = "Atorvastatin 20mg", Pharmacies = 4, Needed = 180, Stock = 90, Urgency = "Medium" },
+                                new { Gov = "Karak", Drug = "Salbutamol Inhaler", Pharmacies = 3, Needed = 120, Stock = 45, Urgency = "High" },
+                                new { Gov = "Balqa", Drug = "Omeprazole 20mg", Pharmacies = 3, Needed = 150, Stock = 80, Urgency = "Low" }
+                            })
+                            {
+                                <tr>
+                                    <td class="fw-bold">@demo.Gov</td>
+                                    <td>@demo.Drug</td>
+                                    <td><span class="badge bg-danger">@demo.Pharmacies</span></td>
+                                    <td class="fw-bold">@demo.Needed</td>
+                                    <td>@demo.Stock</td>
+                                    <td>
+                                        <span class="badge bg-@(demo.Urgency == "High" ? "danger" : demo.Urgency == "Medium" ? "warning text-dark" : "info")">
+                                            @demo.Urgency
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="/Distributor/RestockRequests?governorate=@demo.Gov" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Restock Requests -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-inbox me-2"></i>Recent Restock Requests</h5>
+            <a href="/Distributor/RestockRequests" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pharmacy</th>
+                            <th>Drug</th>
+                            <th>Requested</th>
+                            <th>Current</th>
+                            <th>Min</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in Model.RecentRequests)
+                        {
+                            <tr>
+                                <td><code>#@req.Id</code></td>
+                                <td>
+                                    <div class="fw-bold">@req.PharmacyName</div>
+                                    <small class="text-muted">@req.Governorate</small>
+                                </td>
+                                <td>@req.DrugName</td>
+                                <td class="fw-bold">@req.RequestedQuantity</td>
+                                <td>@req.CurrentStock</td>
+                                <td>@req.MinStockLevel</td>
+                                <td>
+                                    @switch (req.Status)
+                                    {
+                                        case "Pending":
+                                            <span class="badge bg-primary">Pending</span>
+                                            break;
+                                        case "Confirmed":
+                                            <span class="badge bg-info">Confirmed</span>
+                                            break;
+                                        case "Delivered":
+                                            <span class="badge bg-success">Delivered</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (req.Status == "Pending")
+                                    {
+                                        <button class="btn btn-sm btn-success">
+                                            <i class="bi bi-check-lg me-1"></i>Confirm
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>
+                                            <i class="bi bi-check-lg me-1"></i>Done
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.RecentRequests.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Id = 1001, Pharmacy = "Al-Shifa Pharmacy", Gov = "Amman", Drug = "Amoxicillin 500mg", Req = 100, Cur = 15, Min = 20, Status = "Pending" },
+                                new { Id = 1002, Pharmacy = "Zarqa Central", Gov = "Zarqa", Drug = "Insulin Glargine", Req = 50, Cur = 5, Min = 10, Status = "Pending" },
+                                new { Id = 1003, Pharmacy = "Irbid Medical", Gov = "Irbid", Drug = "Metformin 850mg", Req = 80, Cur = 30, Min = 50, Status = "Confirmed" },
+                                new { Id = 1004, Pharmacy = "Salt City Pharma", Gov = "Balqa", Drug = "Omeprazole 20mg", Req = 60, Cur = 20, Min = 25, Status = "Delivered" }
+                            })
+                            {
+                                <tr>
+                                    <td><code>#@demo.Id</code></td>
+                                    <td>
+                                        <div class="fw-bold">@demo.Pharmacy</div>
+                                        <small class="text-muted">@demo.Gov</small>
+                                    </td>
+                                    <td>@demo.Drug</td>
+                                    <td class="fw-bold">@demo.Req</td>
+                                    <td>@demo.Cur</td>
+                                    <td>@demo.Min</td>
+                                    <td>
+                                        @if (demo.Status == "Pending")
+                                        {
+                                            <span class="badge bg-primary">@demo.Status</span>
+                                        }
+                                        else if (demo.Status == "Confirmed")
+                                        {
+                                            <span class="badge bg-info">@demo.Status</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">@demo.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (demo.Status == "Pending")
+                                        {
+                                            <button class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg me-1"></i>Confirm
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                <i class="bi bi-check-lg me-1"></i>Done
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

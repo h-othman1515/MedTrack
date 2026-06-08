@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using MedTrackJordan.Models;
+using MedTrack.Models;
 
 namespace MedTrackJordan.Data
 {

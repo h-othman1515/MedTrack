@@ -1,0 +1,309 @@
+﻿@model MedTrack.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-grid me-2"></i>Pharmacy Dashboard</h2>
+            <p class="text-muted mb-0">Welcome back, @User.Identity?.Name</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Inventory/Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add Stock
+            </a>
+            <a href="/Inventory/Import" class="btn btn-outline-primary">
+                <i class="bi bi-upload me-1"></i>Import CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Healthy Stock</p>
+                            <h3 class="fw-bold mb-0">@Model.HealthyStock</h3>
+                            <small class="text-success"><i class="bi bi-arrow-up"></i> items in good condition</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Expiring Soon</p>
+                            <h3 class="fw-bold mb-0">@Model.ExpiringSoon</h3>
+                            <small class="text-warning"><i class="bi bi-exclamation-triangle"></i> within 60 days</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Critical / Expired</p>
+                            <h3 class="fw-bold mb-0">@(Model.CriticalStock + Model.ExpiredItems)</h3>
+                            <small class="text-danger"><i class="bi bi-x-circle"></i> requires immediate action</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-exclamation-octagon"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Inventory Value</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalInventoryValue.ToString("C0")</h3>
+                            <small class="text-info"><i class="bi bi-currency-exchange"></i> JOD total value</small>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts & Recent Activity Row -->
+    <div class="row g-4 mb-4">
+        <!-- Inventory Status Chart -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart me-2"></i>Inventory Status</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 250px; position: relative;">
+                        <canvas id="inventoryStatusChart"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>Healthy</span>
+                            <span class="fw-bold">@Model.HealthyStock</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-warning me-1" style="font-size: 0.5rem;"></i>Expiring Soon</span>
+                            <span class="fw-bold">@Model.ExpiringSoon</span>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span><i class="bi bi-circle-fill text-danger me-1" style="font-size: 0.5rem;"></i>Critical</span>
+                            <span class="fw-bold">@Model.CriticalStock</span>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span><i class="bi bi-circle-fill text-dark me-1" style="font-size: 0.5rem;"></i>Expired</span>
+                            <span class="fw-bold">@Model.ExpiredItems</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expiry Trend Chart -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-graph-up me-2"></i>Waste vs. Savings Trend</h5>
+                    <select class="form-select form-select-sm" style="width: 120px;">
+                        <option>6 Months</option>
+                        <option>1 Year</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div style="height: 280px;">
+                        <canvas id="expiryTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Inventory & Alerts Row -->
+    <div class="row g-4">
+        <!-- Recent Inventory -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-box-seam me-2"></i>Recent Inventory</h5>
+                    <a href="/Inventory" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-medtrack mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Drug</th>
+                                    <th>Batch</th>
+                                    <th>Qty</th>
+                                    <th>Expiry</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.RecentItems)
+                                {
+                                    <tr class="stock-row-@item.Status.ToLower()">
+                                        <td>
+                                            <div class="fw-bold">@item.DrugName</div>
+                                            <small class="text-muted">@item.GenericName</small>
+                                        </td>
+                                        <td><code>@item.BatchNo</code></td>
+                                        <td>
+                                            <span class="fw-bold">@item.Quantity</span>
+                                            <small class="text-muted">@item.Unit</small>
+                                        </td>
+                                        <td>
+                                            @item.ExpiryDate.ToString("MMM dd, yyyy")
+                                            <br><small class="text-muted">@item.DaysUntilExpiry days left</small>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-@item.Status.ToLower()">@item.Status</span>
+                                        </td>
+                                        <td>
+                                            @if (item.Status == "Danger" || item.Status == "Expired")
+                                            {
+                                                <button class="btn btn-sm btn-sos" data-drug="@item.DrugName" title="Send SOS Alert">
+                                                    <i class="bi bi-broadcast"></i>
+                                                </button>
+                                            }
+                                            else if (item.Status == "Warning")
+                                            {
+                                                <a href="/Surplus/Create?drugId=@item.Id" class="btn btn-sm btn-outline-success" title="List as Surplus">
+                                                    <i class="bi bi-arrow-up-circle"></i>
+                                                </a>
+                                            }
+                                            <a href="/Inventory/Edit/@item.Id" class="btn btn-sm btn-outline-secondary ms-1">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!Model.RecentItems.Any())
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            No inventory items yet. <a href="/Inventory/Create">Add your first item</a>.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bell me-2"></i>Recent Alerts</h5>
+                    <a href="/Alerts" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var alert in Model.RecentAlerts)
+                        {
+                            <div class="list-group-item alert-item @alert.Type.ToLower() p-3">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <span class="fw-bold small">
+                                        @if (alert.Type == "Expiry")
+                                        {
+                                            <i class="bi bi-exclamation-triangle text-danger me-1"></i>
+                                        }
+                                        else if (alert.Type == "Shortage")
+                                        {
+                                            <i class="bi bi-dash-circle text-warning me-1"></i>
+                                        }
+                                        else if (alert.Type == "Restock")
+                                        {
+                                            <i class="bi bi-box-arrow-in-down text-info me-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-arrow-left-right text-success me-1"></i>
+                                        }
+                                        @alert.Type Alert
+                                    </span>
+                                    <small class="text-muted">@alert.SentAt.ToString("MMM dd")</small>
+                                </div>
+                                <p class="mb-1 small">@alert.Message</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">via @alert.Channel</small>
+                                    @if (!alert.IsAcknowledged)
+                                    {
+                                        <button class="btn btn-xs btn-outline-primary btn-sm" onclick="acknowledgeAlert(@alert.Id)">
+                                            Acknowledge
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.RecentAlerts.Any())
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="bi bi-check-circle fs-1 text-success mb-2 d-block"></i>
+                                No active alerts. All clear!
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/Surplus" class="btn btn-outline-success">
+                            <i class="bi bi-search me-2"></i>Find Surplus Stock
+                        </a>
+                        <a href="/Transfer" class="btn btn-outline-primary">
+                            <i class="bi bi-truck me-2"></i>View Transfers
+                        </a>
+                        <a href="/Reports" class="btn btn-outline-secondary">
+                            <i class="bi bi-file-earmark-text me-2"></i>Waste Report
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function acknowledgeAlert(alertId) {
+            // AJAX call to acknowledge alert
+            showToast('Alert acknowledged', 'success');
+        }
+    </script>
+}

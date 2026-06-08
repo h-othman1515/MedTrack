@@ -1,0 +1,58 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Regional Demand";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-graph-up me-2"></i>Regional Demand</h2>
+            <p class="text-muted mb-0">Aggregated demand signals to plan shipments</p>
+        </div>
+        <a href="/Distributor/RestockRequests" class="btn btn-primary"><i class="bi bi-inbox me-1"></i>View Requests</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2"></i>Demand by Governorate</h5></div>
+                <div class="card-body"><div style="height:320px"><canvas id="demandChart"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-list-ol me-2"></i>Top Requested Drugs</h5></div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var d in new[] {
+                            new { Drug = "Insulin Glargine", Qty = 450 },
+                            new { Drug = "Amoxicillin 500mg", Qty = 320 },
+                            new { Drug = "Metformin 850mg", Qty = 280 },
+                            new { Drug = "Atorvastatin 20mg", Qty = 180 },
+                            new { Drug = "Salbutamol Inhaler", Qty = 120 }
+                        })
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                @d.Drug <span class="badge bg-primary rounded-pill">@d.Qty</span>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        new Chart(document.getElementById('demandChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Amman','Zarqa','Irbid','Mafraq','Karak','Balqa'],
+                datasets: [{ label: 'Units Needed', data: [320,450,280,180,120,150], backgroundColor:'#ff7900' }]
+            },
+            options: { responsive:true, maintainAspectRatio:false }
+        });
+    </script>
+}

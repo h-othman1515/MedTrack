@@ -1,0 +1,313 @@
+@model MedTrack.Models.ViewModels.UserManagementViewModel
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-people me-2"></i>User Management</h2>
+            <p class="text-muted mb-0">Manage accounts, roles, and access permissions</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="exportTableToCSV('usersTable', 'users.csv')">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <a href="/Admin/CreateUser" class="btn btn-primary">
+                <i class="bi bi-person-plus me-1"></i>Add User
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchUsers" placeholder="Search users...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterRole">
+                        <option value="">All Roles</option>
+                        <option>Pharmacy Staff</option>
+                        <option>Pharmacy Manager</option>
+                        <option>Distributor</option>
+                        <option>MOH Admin</option>
+                        <option>System Admin</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Pending">Pending</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="filterGov">
+                        <option value="">All Governorates</option>
+                        <option>Amman</option>
+                        <option>Irbid</option>
+                        <option>Zarqa</option>
+                        <option>Balqa</option>
+                        <option>Madaba</option>
+                        <option>Mafraq</option>
+                        <option>Karak</option>
+                        <option>Aqaba</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetUserFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0 datatable" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" class="form-check-input" id="selectAllUsers"></th>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Pharmacy</th>
+                            <th>Governorate</th>
+                            <th>Status</th>
+                            <th>Last Login</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td><input type="checkbox" class="form-check-input row-checkbox"></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle bg-primary text-white me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            @user.FullName.Substring(0, 1)
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold">@user.FullName</div>
+                                            <small class="text-muted">@user.Email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@(user.Role == "System Admin" ? "dark" : user.Role == "MOH Admin" ? "primary" : user.Role == "Distributor" ? "orange" : user.Role == "Pharmacy Manager" ? "success" : "info") bg-opacity-10 text-@(user.Role == "System Admin" ? "dark" : user.Role == "MOH Admin" ? "primary" : user.Role == "Distributor" ? "orange" : user.Role == "Pharmacy Manager" ? "success" : "info")" style="@(user.Role == "Distributor" ? "color: #ff7900;" : "")">
+                                        @user.Role
+                                    </span>
+                                </td>
+                                <td>@(user.PharmacyName ?? "—")</td>
+                                <td>@(user.Governorate ?? "—")</td>
+                                <td>
+                                    @if (user.Status == "Active")
+                                    {
+                                        <span class="status-badge status-healthy">Active</span>
+                                    }
+                                    else if (user.Status == "Suspended")
+                                    {
+                                        <span class="status-badge status-danger">Suspended</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="status-badge status-warning">Pending</span>
+                                    }
+                                </td>
+                                <td>@(user.LastLogin?.ToString("MMM dd, HH:mm") ?? "Never")</td>
+                                <td>@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Admin/EditUser/@user.Id" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (user.Status == "Active")
+                                        {
+                                        <button type="button" class="btn btn-outline-warning"
+                                                data-mt-swal-message="Suspend this user? They will be unable to log in."
+                                                data-mt-swal-title="Suspend user"
+                                                data-mt-swal-icon="warning"
+                                                data-mt-swal-confirm-text="Suspend"
+                                                data-mt-swal-success="User suspended"
+                                                data-mt-swal-success-type="warning"
+                                                data-bs-toggle="tooltip" title="Suspend">
+                                            <i class="bi bi-pause-circle"></i>
+                                        </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-outline-success" onclick="activateUser()" data-bs-toggle="tooltip" title="Activate">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                        }
+                                        <button type="button" class="btn btn-outline-danger"
+                                                data-mt-swal-message="Delete this user permanently? This cannot be undone."
+                                                data-mt-swal-title="Delete user"
+                                                data-mt-swal-icon="warning"
+                                                data-mt-swal-danger="true"
+                                                data-mt-swal-confirm-text="Delete"
+                                                data-mt-swal-success="User deleted"
+                                                data-bs-toggle="tooltip" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Users.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Id = "u1", Name = "Ahmad Khalil", Email = "ahmad@alshifa.jo", Role = "Pharmacy Manager", Pharmacy = "Al-Shifa Pharmacy", Gov = "Amman", Status = "Active", LastLogin = (DateTime?)DateTime.Now.AddHours(-2), Created = DateTime.Now.AddMonths(-3) },
+                                new { Id = "u2", Name = "Sara Nasser", Email = "sara@irbidcare.jo", Role = "Pharmacy Staff", Pharmacy = "Irbid Care Center", Gov = "Irbid", Status = "Active", LastLogin = (DateTime?)DateTime.Now.AddDays(-1), Created = DateTime.Now.AddMonths(-2) },
+                                new { Id = "u3", Name = "Omar Haddad", Email = "omar@zarqahealth.jo", Role = "Pharmacy Manager", Pharmacy = "Zarqa Health Plus", Gov = "Zarqa", Status = "Pending", LastLogin = (DateTime?)null, Created = DateTime.Now.AddDays(-2) },
+                                new { Id = "u4", Name = "Dr. Layla Mahmoud", Email = "layla.m@moh.gov.jo", Role = "MOH Admin", Pharmacy = (string)null, Gov = "Amman", Status = "Active", LastLogin = (DateTime?)DateTime.Now.AddHours(-5), Created = DateTime.Now.AddMonths(-6) },
+                                new { Id = "u5", Name = "Jordan Pharma Dist.", Email = "orders@jpd.jo", Role = "Distributor", Pharmacy = "JPD Co.", Gov = "Amman", Status = "Active", LastLogin = (DateTime?)DateTime.Now.AddHours(-1), Created = DateTime.Now.AddMonths(-4) },
+                                new { Id = "u6", Name = "Khaled Omar", Email = "khaled@saltpharma.jo", Role = "Pharmacy Staff", Pharmacy = "Salt City Pharma", Gov = "Balqa", Status = "Suspended", LastLogin = (DateTime?)DateTime.Now.AddDays(-10), Created = DateTime.Now.AddMonths(-1) }
+                            })
+                            {
+                                <tr>
+                                    <td><input type="checkbox" class="form-check-input row-checkbox"></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-circle bg-primary text-white me-2" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                                @demo.Name.Substring(0, 1)
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">@demo.Name</div>
+                                                <small class="text-muted">@demo.Email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@(demo.Role == "System Admin" ? "dark" : demo.Role == "MOH Admin" ? "primary" : demo.Role == "Distributor" ? "orange" : demo.Role == "Pharmacy Manager" ? "success" : "info") bg-opacity-10 text-@(demo.Role == "System Admin" ? "dark" : demo.Role == "MOH Admin" ? "primary" : demo.Role == "Distributor" ? "orange" : demo.Role == "Pharmacy Manager" ? "success" : "info")" style="@(demo.Role == "Distributor" ? "color: #ff7900;" : "")">
+                                            @demo.Role
+                                        </span>
+                                    </td>
+                                    <td>@(demo.Pharmacy ?? "—")</td>
+                                    <td>@demo.Gov</td>
+                                    <td>
+                                        @if (demo.Status == "Active")
+                                        {
+                                            <span class="status-badge status-healthy">Active</span>
+                                        }
+                                        else if (demo.Status == "Suspended")
+                                        {
+                                            <span class="status-badge status-danger">Suspended</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-badge status-warning">Pending</span>
+                                        }
+                                    </td>
+                                    <td>@(demo.LastLogin?.ToString("MMM dd, HH:mm") ?? "Never")</td>
+                                    <td>@demo.Created.ToString("MMM dd, yyyy")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/Admin/EditUser/@demo.Id" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            @if (demo.Status == "Active")
+                                            {
+                                                <button type="button" class="btn btn-outline-warning"
+                                                        data-mt-swal-message="Suspend this user? They will be unable to log in."
+                                                        data-mt-swal-title="Suspend user"
+                                                        data-mt-swal-icon="warning"
+                                                        data-mt-swal-confirm-text="Suspend"
+                                                        data-mt-swal-success="User suspended"
+                                                        data-mt-swal-success-type="warning"
+                                                        data-bs-toggle="tooltip" title="Suspend">
+                                                    <i class="bi bi-pause-circle"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-outline-success" onclick="activateUser()" data-bs-toggle="tooltip" title="Activate">
+                                                    <i class="bi bi-play-circle"></i>
+                                                </button>
+                                            }
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    data-mt-swal-message="Delete this user permanently? This cannot be undone."
+                                                    data-mt-swal-title="Delete user"
+                                                    data-mt-swal-icon="warning"
+                                                    data-mt-swal-danger="true"
+                                                    data-mt-swal-confirm-text="Delete"
+                                                    data-mt-swal-success="User deleted"
+                                                    data-bs-toggle="tooltip" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+            <span class="text-muted small">Showing @Model.Users.Count users</span>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary btn-sm" id="bulkSuspend">
+                    <i class="bi bi-pause-circle me-1"></i>Suspend Selected
+                </button>
+                <button class="btn btn-outline-danger btn-sm" id="bulkDeleteUsers">
+                    <i class="bi bi-trash me-1"></i>Delete Selected
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function activateUser() {
+            showToast('User activated', 'success');
+        }
+
+        $('#bulkSuspend').on('click', function () {
+            mtConfirm('Suspend all selected users? They will be unable to log in.', {
+                title: 'Suspend selected',
+                icon: 'warning',
+                confirmText: 'Suspend'
+            }).then(function (ok) {
+                if (ok) showToast('Selected users suspended', 'warning');
+            });
+        });
+
+        $('#bulkDeleteUsers').on('click', function () {
+            mtConfirm('Delete all selected users permanently? This cannot be undone.', {
+                title: 'Delete selected',
+                icon: 'warning',
+                danger: true,
+                confirmText: 'Delete'
+            }).then(function (ok) {
+                if (ok) showToast('Selected users deleted', 'success');
+            });
+        });
+
+        function resetUserFilters() {
+            $('#searchUsers').val('');
+            $('#filterRole').val('');
+            $('#filterStatus').val('');
+            $('#filterGov').val('');
+            $('#usersTable tbody tr').show();
+        }
+        $('#searchUsers').on('keyup', function() {
+            var value = $(this).val().toLowerCase();
+            $('#usersTable tbody tr').filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+            });
+        });
+    </script>
+}

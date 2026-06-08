@@ -1,25 +1,37 @@
-﻿@model MedTrackJordan.Models.SurplusPost
+﻿@model MedTrack.Models.SurplusPost
 @{
     ViewData["Title"] = "Delete Post";
+    ViewData["PageIcon"] = "bi-exclamation-triangle";
+    ViewData["Subtitle"] = "Remove surplus listing";
+    ViewData["BackUrl"] = Url.Action("MyPosts");
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm border-danger">
-            <div class="card-body p-4 text-center">
-                <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
-                <h4 class="fw-bold mt-3">Remove Surplus Post?</h4>
-                <p class="text-muted">
-                    <strong>@Model.Drug.GenericName</strong> — @Model.Quantity units from @Model.Pharmacy.Name
-                </p>
+<div class="fade-in">
+    <partial name="_PageHeader" />
 
-                <form asp-action="Delete" class="mt-4">
-                    <input type="hidden" asp-for="Id" />
-                    <button type="submit" class="btn btn-danger fw-semibold">
-                        <i class="bi bi-trash me-1"></i>Confirm Delete
-                    </button>
-                    <a asp-action="MyPosts" class="btn btn-outline-secondary ms-2">Cancel</a>
-                </form>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    <h4 class="fw-bold mt-3">Remove Surplus Post?</h4>
+                    <p class="text-muted">
+                        <strong>@Model.Drug.GenericName</strong> — @Model.Quantity units from @Model.Pharmacy.Name
+                    </p>
+
+                    <form asp-action="Delete" class="mt-4"
+                          data-mt-swal-confirm="Remove this surplus post for @Model.Drug.GenericName?"
+                          data-mt-swal-title="Confirm deletion"
+                          data-mt-swal-icon="warning"
+                          data-mt-swal-danger="true"
+                          data-mt-swal-confirm-text="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger fw-semibold">
+                            <i class="bi bi-trash me-1"></i>Confirm Delete
+                        </button>
+                        <a asp-action="MyPosts" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

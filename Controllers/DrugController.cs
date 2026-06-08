@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using MedTrackJordan.Data;
-using MedTrackJordan.Models;
+using MedTrack.Models;
+using MedTrack.Data;
 
-namespace MedTrackJordan.Controllers
+namespace MedTrack.Controllers
 {
-    [Authorize(Roles = "Admin,PharmacyManager,MOHAdmin")]
+    [Authorize(Roles = "System Admin,Pharmacy Manager,MOH Admin")]
     public class DrugController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -32,10 +32,10 @@ namespace MedTrackJordan.Controllers
             return View(drug);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         public IActionResult Create() => View();
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Drug drug)
@@ -50,7 +50,7 @@ namespace MedTrackJordan.Controllers
             return View(drug);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -59,7 +59,7 @@ namespace MedTrackJordan.Controllers
             return View(drug);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Drug drug)
@@ -83,7 +83,7 @@ namespace MedTrackJordan.Controllers
             return View(drug);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -92,7 +92,7 @@ namespace MedTrackJordan.Controllers
             return View(drug);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

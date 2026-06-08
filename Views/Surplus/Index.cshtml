@@ -1,0 +1,239 @@
+@model MedTrack.Models.ViewModels.SurplusSearchViewModel
+@{
+    ViewData["Title"] = "Surplus Marketplace";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-shop-window me-2"></i>Surplus Sharing Marketplace</h2>
+            <p class="text-muted mb-0">Find surplus medications from nearby pharmacies or list your excess stock</p>
+        </div>
+        <a href="/Surplus/Create" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>List Surplus
+        </a>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search Drug</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input asp-for="SearchTerm" class="form-control" placeholder="Drug name or generic name..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Governorate</label>
+                    <select asp-for="Governorate" class="form-select">
+                        <option value="">All Governorates</option>
+                        <option>Amman</option>
+                        <option>Irbid</option>
+                        <option>Zarqa</option>
+                        <option>Balqa</option>
+                        <option>Madaba</option>
+                        <option>Ajloun</option>
+                        <option>Jerash</option>
+                        <option>Mafraq</option>
+                        <option>Karak</option>
+                        <option>Tafilah</option>
+                        <option>Ma'an</option>
+                        <option>Aqaba</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Category</label>
+                    <select asp-for="Category" class="form-select">
+                        <option value="">All Categories</option>
+                        <option>Antibiotics</option>
+                        <option>Cardiovascular</option>
+                        <option>Diabetes</option>
+                        <option>Pain Relief</option>
+                        <option>Vitamins</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel me-1"></i>Filter
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-3">
+                <small class="text-muted me-2">Quick Filter:</small>
+                @foreach (var gov in new[] { "Amman", "Irbid", "Zarqa", "Balqa", "Madaba", "Mafraq", "Karak", "Aqaba" })
+                {
+                    <span class="badge gov-pill bg-light text-dark me-1 mb-1" data-gov="@gov">@gov</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div class="row g-4">
+        @if (Model.Results.Any())
+        {
+            @foreach (var item in Model.Results)
+            {
+                <div class="col-md-6 col-lg-4 col-xl-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary">@item.Category</span>
+                                @if (item.DaysUntilExpiry <= 30)
+                                {
+                                    <span class="badge bg-danger">@item.DaysUntilExpiry days left</span>
+                                }
+                                else if (item.DaysUntilExpiry <= 60)
+                                {
+                                    <span class="badge bg-warning text-dark">@item.DaysUntilExpiry days left</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">@item.DaysUntilExpiry days left</span>
+                                }
+                            </div>
+
+                            <h5 class="fw-bold mb-1">@item.DrugName</h5>
+                            <p class="text-muted small mb-2">@item.GenericName</p>
+
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-geo-alt text-primary me-1"></i>
+                                <small class="text-muted">@item.PharmacyName, @item.Governorate</small>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="fw-bold fs-5">@item.Quantity</span>
+                                    <small class="text-muted">@item.Unit</small>
+                                </div>
+                                @if (item.Price.HasValue)
+                                {
+                                    <span class="badge bg-primary">@item.Price.Value.ToString("0.00") JOD</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">FREE</span>
+                                }
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a href="/Transfer/Create?surplusId=@item.Id" class="btn btn-primary btn-sm flex-grow-1">
+                                    <i class="bi bi-cart-plus me-1"></i>Request
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light small text-muted">
+                            <i class="bi bi-clock me-1"></i>Listed @item.PostedAt.ToString("MMM dd, yyyy")
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
+        @if (!Model.Results.Any())
+        {
+        @foreach (var demo in new[] {
+            new { DrugName = "Amoxicillin 500mg", GenericName = "Amoxicillin", Category = "Antibiotics", Qty = 150, Unit = "Capsules", Gov = "Amman", Pharmacy = "Al-Shifa Pharmacy", Days = 45, Price = (decimal?)5.50, Posted = "Jun 04, 2026", SurplusId = 1 },
+            new { DrugName = "Metformin 850mg", GenericName = "Metformin HCl", Category = "Diabetes", Qty = 80, Unit = "Tablets", Gov = "Zarqa", Pharmacy = "Zarqa Central", Days = 120, Price = (decimal?)null, Posted = "Jun 05, 2026", SurplusId = 1 },
+            new { DrugName = "Atorvastatin 20mg", GenericName = "Atorvastatin", Category = "Cardiovascular", Qty = 200, Unit = "Tablets", Gov = "Irbid", Pharmacy = "Irbid Medical", Days = 180, Price = (decimal?)8.00, Posted = "Jun 03, 2026", SurplusId = 1 },
+            new { DrugName = "Omeprazole 20mg", GenericName = "Omeprazole", Category = "Gastrointestinal", Qty = 60, Unit = "Capsules", Gov = "Balqa", Pharmacy = "Salt City Pharma", Days = 25, Price = (decimal?)null, Posted = "Jun 06, 2026", SurplusId = 1 },
+            new { DrugName = "Vitamin D3 1000IU", GenericName = "Cholecalciferol", Category = "Vitamins", Qty = 100, Unit = "Tablets", Gov = "Amman", Pharmacy = "Rainbow Pharmacy", Days = 300, Price = (decimal?)3.00, Posted = "Jun 02, 2026", SurplusId = 1 },
+            new { DrugName = "Salbutamol Inhaler", GenericName = "Salbutamol", Category = "Respiratory", Qty = 12, Unit = "Inhalers", Gov = "Madaba", Pharmacy = "Madaba Care", Days = 90, Price = (decimal?)12.00, Posted = "Jun 05, 2026", SurplusId = 1 }
+        })
+        {
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">@demo.Category</span>
+                            @if (demo.Days <= 30)
+                            {
+                                <span class="badge bg-danger">@demo.Days days left</span>
+                            }
+                            else if (demo.Days <= 60)
+                            {
+                                <span class="badge bg-warning text-dark">@demo.Days days left</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">@demo.Days days left</span>
+                            }
+                        </div>
+
+                        <h5 class="fw-bold mb-1">@demo.DrugName</h5>
+                        <p class="text-muted small mb-2">@demo.GenericName</p>
+
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-geo-alt text-primary me-1"></i>
+                            <small class="text-muted">@demo.Pharmacy, @demo.Gov</small>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <span class="fw-bold fs-5">@demo.Qty</span>
+                                <small class="text-muted">@demo.Unit</small>
+                            </div>
+                            @if (demo.Price.HasValue)
+                            {
+                                <span class="badge bg-primary">@demo.Price.Value.ToString("C2") JOD</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">FREE</span>
+                            }
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="/Transfer/Create?surplusId=@demo.SurplusId" class="btn btn-primary btn-sm flex-grow-1">
+                                <i class="bi bi-cart-plus me-1"></i>Request
+                            </a>
+                            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light small text-muted">
+                        <i class="bi bi-clock me-1"></i>Listed @demo.Posted
+                    </div>
+                </div>
+            </div>
+        }
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Surplus Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="small text-muted">Pharmacy</label>
+                    <p class="fw-bold mb-0">Al-Shifa Pharmacy</p>
+                    <small class="text-muted">Amman, Jordan</small>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted">Condition</label>
+                    <p class="mb-0">Stored in temperature-controlled environment. Original packaging intact.</p>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted">Contact</label>
+                    <p class="mb-0"><i class="bi bi-telephone me-1"></i>+962 7X XXX XXXX</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/Transfer/Create?surplusId=1" class="btn btn-primary">
+                    <i class="bi bi-cart-plus me-1"></i>Request Transfer
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

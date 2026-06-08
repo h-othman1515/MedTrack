@@ -1,85 +1,70 @@
-﻿@model MedTrackJordan.ViewModels.LoginViewModel
+@model MedTrack.Models.ViewModels.LoginViewModel
 @{
     ViewData["Title"] = "Login";
+    ViewData["HomeTheme"] = true;
+    ViewData["NavActive"] = "login";
+    Layout = "_Layout";
 }
 
-<div class="row justify-content-center mt-4">
-    <div class="col-md-5">
+<partial name="_PillField" />
+<partial name="_HomeNav" />
 
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4">
+<main>
+    <section class="mt-auth-page">
+        <div class="mt-auth-wrap">
+            <div class="mt-auth-header">
+                <div class="mt-auth-icon"><i class="bi bi-capsule-pill"></i></div>
+                <h1>Welcome Back</h1>
+                <p>Sign in to your MedTrack account</p>
+            </div>
 
-                <div class="text-center mb-4">
-                    <i class="bi bi-capsule text-primary fs-1"></i>
-                    <h3 class="fw-bold mt-2">MedTrack Jordan</h3>
-                    <p class="text-muted">Sign in to your account</p>
-                </div>
-
-                <form asp-action="Login" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-
-                    <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+            <div class="mt-auth-card">
+                <form asp-controller="Account" asp-action="Login" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                     <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold"></label>
+                        <label asp-for="Email" class="form-label"></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input asp-for="Email" class="form-control"
-                                   placeholder="you@example.com" autocomplete="email" />
+                            <input asp-for="Email" class="form-control" placeholder="name@pharmacy.jo" />
                         </div>
                         <span asp-validation-for="Email" class="text-danger small"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label asp-for="Password" class="form-label fw-semibold"></label>
+                        <label asp-for="Password" class="form-label"></label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input asp-for="Password" class="form-control"
-                                   placeholder="••••••••" autocomplete="current-password" />
-                            <button class="btn btn-outline-secondary" type="button"
-                                    onclick="togglePassword(this)">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
                         </div>
                         <span asp-validation-for="Password" class="text-danger small"></span>
                     </div>
 
-                    <div class="mb-4 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input asp-for="RememberMe" class="form-check-input" />
+                            <label asp-for="RememberMe" class="form-check-label small"></label>
+                        </div>
+                        <a href="/Account/ForgotPassword" class="small text-decoration-none">Forgot password?</a>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    <button type="submit" class="btn-primary-mt w-100 justify-content-center mb-3">
+                        <i class="bi bi-box-arrow-in-right"></i> Sign In
                     </button>
+
+                    <div class="text-center">
+                        <p class="text-muted small mb-0">
+                            Don't have an account? <a href="/Account/Register" class="text-decoration-none">Register</a>
+                        </p>
+                    </div>
                 </form>
-
-                <hr class="my-4" />
-
-                <p class="text-center text-muted small mb-0">
-                    Don't have an account?
-                    <a asp-action="Register" class="text-primary fw-semibold">Register here</a>
-                </p>
-
             </div>
-        </div>
 
-    </div>
-</div>
+            <div class="mt-auth-footer">MedTrack Jordan — Orange Internship 2025</div>
+        </div>
+    </section>
+</main>
 
 @section Scripts {
-    <script>
-        function togglePassword(btn) {
-            const input = btn.closest('.input-group').querySelector('input');
-            const icon  = btn.querySelector('i');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('bi-eye', 'bi-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('bi-eye-slash', 'bi-eye');
-            }
-        }
-    </script>
+    <partial name="_ValidationScriptsPartial" />
 }

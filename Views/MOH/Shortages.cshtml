@@ -1,0 +1,150 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "Shortage Map";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-2"></i>National Shortage Map</h2>
+            <p class="text-muted mb-0">Geographic visualization of medication shortages across Jordan's 12 governorates</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/MOH/Dashboard" class="btn btn-outline-primary">
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            <a href="/MOH/Reports" class="btn btn-primary">
+                <i class="bi bi-download me-1"></i>Export
+            </a>
+        </div>
+    </div>
+
+    <!-- Map Legend -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+                <span class="small fw-bold text-muted">Severity:</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span style="width: 16px; height: 16px; background: #dc3545; border-radius: 50%; display: inline-block;"></span>
+                    <small>Critical (>10 shortages)</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span style="width: 16px; height: 16px; background: #ffc107; border-radius: 50%; display: inline-block;"></span>
+                    <small>High (5-10 shortages)</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span style="width: 16px; height: 16px; background: #0dcaf0; border-radius: 50%; display: inline-block;"></span>
+                    <small>Medium (3-4 shortages)</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span style="width: 16px; height: 16px; background: #198754; border-radius: 50%; display: inline-block;"></span>
+                    <small>Low (1-2 shortages)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div id="shortageMap"></div>
+        </div>
+    </div>
+
+    <!-- Governorate Details Table -->
+    <div class="card mt-4">
+        <div class="card-header bg-white">
+            <h5 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Governorate Details</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0 datatable">
+                    <thead>
+                        <tr>
+                            <th>Governorate</th>
+                            <th>Pharmacies</th>
+                            <th>Active Shortages</th>
+                            <th>Severity</th>
+                            <th>Top Short Drug</th>
+                            <th>Last Updated</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var hotspot in Model.ShortageHotspots)
+                        {
+                            <tr>
+                                <td class="fw-bold">@hotspot.Governorate</td>
+                                <td>@hotspot.PharmaciesAffected</td>
+                                <td><span class="fw-bold text-@(hotspot.Severity == "Critical" ? "danger" : hotspot.Severity == "High" ? "warning" : "info")">@hotspot.ActiveShortages</span></td>
+                                <td>
+                                    <span class="badge bg-@(hotspot.Severity == "Critical" ? "danger" : hotspot.Severity == "High" ? "warning text-dark" : "info")">
+                                        @hotspot.Severity
+                                    </span>
+                                </td>
+                                <td>Insulin Glargine</td>
+                                <td>@DateTime.Now.ToString("MMM dd, HH:mm")</td>
+                                <td>
+                                    <a href="/MOH/Details?governorate=@hotspot.Governorate" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Details
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.ShortageHotspots.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Gov = "Zarqa", Pharmacies = 8, Shortages = 15, Severity = "Critical", Drug = "Insulin Glargine" },
+                                new { Gov = "Amman", Pharmacies = 6, Shortages = 12, Severity = "High", Drug = "Amoxicillin 500mg" },
+                                new { Gov = "Irbid", Pharmacies = 5, Shortages = 8, Severity = "High", Drug = "Metformin 850mg" },
+                                new { Gov = "Mafraq", Pharmacies = 4, Shortages = 6, Severity = "Medium", Drug = "Atorvastatin 20mg" },
+                                new { Gov = "Karak", Pharmacies = 3, Shortages = 7, Severity = "Medium", Drug = "Salbutamol Inhaler" },
+                                new { Gov = "Balqa", Pharmacies = 3, Shortages = 5, Severity = "Low", Drug = "Omeprazole 20mg" },
+                                new { Gov = "Madaba", Pharmacies = 2, Shortages = 3, Severity = "Low", Drug = "Vitamin D3 1000IU" },
+                                new { Gov = "Aqaba", Pharmacies = 2, Shortages = 4, Severity = "Low", Drug = "Paracetamol 500mg" }
+                            })
+                            {
+                                <tr>
+                                    <td class="fw-bold">@demo.Gov</td>
+                                    <td>@demo.Pharmacies</td>
+                                    <td><span class="fw-bold text-@(demo.Severity == "Critical" ? "danger" : demo.Severity == "High" ? "warning" : "info")">@demo.Shortages</span></td>
+                                    <td>
+                                        <span class="badge bg-@(demo.Severity == "Critical" ? "danger" : demo.Severity == "High" ? "warning text-dark" : "info")">
+                                            @demo.Severity
+                                        </span>
+                                    </td>
+                                    <td>@demo.Drug</td>
+                                    <td>@DateTime.Now.ToString("MMM dd, HH:mm")</td>
+                                    <td>
+                                        <a href="/MOH/Details?governorate=@demo.Gov" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.mtShortageMapData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.ShortageHotspots.Select(h => new {
+                name = h.Governorate,
+                lat = h.Latitude,
+                lng = h.Longitude,
+                shortages = h.ActiveShortages,
+                severity = h.Severity.ToLowerInvariant(),
+                pharmacies = h.PharmaciesAffected
+            })
+        ));
+        $(document).ready(function() {
+            initShortageMap();
+        });
+    </script>
+}

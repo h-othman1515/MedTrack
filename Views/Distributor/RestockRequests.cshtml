@@ -1,0 +1,62 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Restock Requests";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-inbox me-2"></i>Restock Requests</h2>
+            <p class="text-muted mb-0">@Model.PendingRestockRequests pending requests awaiting confirmation</p>
+        </div>
+        <a href="/Distributor" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-inbox me-2"></i>Incoming Requests</h5>
+            <select class="form-select form-select-sm" style="width:160px">
+                <option>All Statuses</option><option>Pending</option><option>Confirmed</option><option>Delivered</option>
+            </select>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                        <tr><th>ID</th><th>Pharmacy</th><th>Drug</th><th>Requested</th><th>Current</th><th>Min</th><th>Status</th><th>Action</th></tr>
+                    </thead>
+                <tbody>
+                    @foreach (var r in new[] {
+                        new { Id = 1001, Pharmacy = "Al-Shifa Pharmacy", Gov = "Amman", Drug = "Amoxicillin 500mg", Req = 100, Cur = 15, Min = 20, Status = "Pending" },
+                        new { Id = 1002, Pharmacy = "Zarqa Central", Gov = "Zarqa", Drug = "Insulin Glargine", Req = 50, Cur = 5, Min = 10, Status = "Pending" },
+                        new { Id = 1003, Pharmacy = "Irbid Medical", Gov = "Irbid", Drug = "Metformin 850mg", Req = 80, Cur = 30, Min = 50, Status = "Confirmed" },
+                        new { Id = 1004, Pharmacy = "Salt City Pharma", Gov = "Balqa", Drug = "Omeprazole 20mg", Req = 60, Cur = 20, Min = 25, Status = "Delivered" }
+                    })
+                    {
+                        <tr>
+                            <td><code>#@r.Id</code></td>
+                            <td><div class="fw-bold">@r.Pharmacy</div><small class="text-muted">@r.Gov</small></td>
+                            <td>@r.Drug</td>
+                            <td class="fw-bold">@r.Req</td>
+                            <td>@r.Cur</td>
+                            <td>@r.Min</td>
+                            <td><span class="badge bg-@(r.Status == "Pending" ? "primary" : r.Status == "Confirmed" ? "info" : "success")">@r.Status</span></td>
+                            <td>
+                                @if (r.Status == "Pending")
+                                {
+                                    <button class="btn btn-sm btn-success"><i class="bi bi-check-lg me-1"></i>Confirm</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>Done</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

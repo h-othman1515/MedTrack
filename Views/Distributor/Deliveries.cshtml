@@ -1,0 +1,46 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Deliveries";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-truck me-2"></i>Deliveries</h2>
+            <p class="text-muted mb-0">@Model.ConfirmedDeliveries confirmed deliveries this month</p>
+        </div>
+        <a href="/Distributor" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-truck me-2"></i>Delivery Schedule</h5></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                        <tr><th>Shipment</th><th>Pharmacy</th><th>Drug</th><th>Qty</th><th>Dispatched</th><th>ETA</th><th>Status</th></tr>
+                    </thead>
+                <tbody>
+                    @foreach (var d in new[] {
+                        new { Id = "SHP-2041", Pharmacy = "Irbid Medical", Drug = "Metformin 850mg", Qty = 80, Disp = "2026-06-06", Eta = "2026-06-09", Status = "In Transit" },
+                        new { Id = "SHP-2040", Pharmacy = "Salt City Pharma", Drug = "Omeprazole 20mg", Qty = 60, Disp = "2026-06-04", Eta = "2026-06-06", Status = "Delivered" },
+                        new { Id = "SHP-2039", Pharmacy = "Al-Shifa Pharmacy", Drug = "Paracetamol 500mg", Qty = 200, Disp = "2026-06-03", Eta = "2026-06-05", Status = "Delivered" }
+                    })
+                    {
+                        <tr>
+                            <td><code>@d.Id</code></td>
+                            <td class="fw-semibold">@d.Pharmacy</td>
+                            <td>@d.Drug</td>
+                            <td>@d.Qty</td>
+                            <td class="small text-muted">@d.Disp</td>
+                            <td class="small text-muted">@d.Eta</td>
+                            <td><span class="badge bg-@(d.Status == "Delivered" ? "success" : "info")">@d.Status</span></td>
+                        </tr>
+                    }
+                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

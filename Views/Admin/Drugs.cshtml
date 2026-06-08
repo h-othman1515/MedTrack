@@ -1,0 +1,255 @@
+@model MedTrack.Models.ViewModels.DrugCatalogViewModel
+@{
+    ViewData["Title"] = "Drug Catalog";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-capsule me-2"></i>Drug Catalog</h2>
+            <p class="text-muted mb-0">Manage master drug list, categories, and default thresholds</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="exportTableToCSV('drugsTable', 'drug_catalog.csv')">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <a href="/Admin/AddDrug" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add Drug
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="fw-bold text-primary mb-1">@Model.TotalDrugs</h4>
+                    <small class="text-muted">Total Drugs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="fw-bold text-success mb-1">@Model.Categories.Count</h4>
+                    <small class="text-muted">Categories</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="fw-bold text-warning mb-1">@Model.Drugs.Count(d => d.IsCritical)</h4>
+                    <small class="text-muted">Critical Drugs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="fw-bold text-info mb-1">@Model.Drugs.Count(d => d.RequiresPrescription)</h4>
+                    <small class="text-muted">Rx Required</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                <span class="badge gov-pill active bg-light text-dark" data-cat="">All</span>
+                @foreach (var cat in Model.Categories)
+                {
+                    <span class="badge gov-pill bg-light text-dark" data-cat="@cat">@cat</span>
+                }
+                @if (!Model.Categories.Any())
+                {
+                    @foreach (var cat in new[] { "Antibiotics", "Antiviral", "Cardiovascular", "Diabetes", "Gastrointestinal", "Pain Relief", "Respiratory", "Vitamins" })
+                    {
+                        <span class="badge gov-pill bg-light text-dark" data-cat="@cat">@cat</span>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Drugs Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0 datatable" id="drugsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Generic Name</th>
+                            <th>Brand Names</th>
+                            <th>Category</th>
+                            <th>Default Min</th>
+                            <th>Unit</th>
+                            <th>Rx Required</th>
+                            <th>Critical</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var drug in Model.Drugs)
+                        {
+                            <tr data-category="@drug.Category">
+                                <td><code>#@drug.Id</code></td>
+                                <td>
+                                    <div class="fw-bold">@drug.GenericName</div>
+                                    <small class="text-muted">@drug.ScientificName</small>
+                                </td>
+                                <td>@drug.BrandNames</td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@drug.Category</span></td>
+                                <td class="fw-bold">@drug.DefaultMinStock</td>
+                                <td>@drug.DefaultUnit</td>
+                                <td>
+                                    @if (drug.RequiresPrescription)
+                                    {
+                                        <span class="badge bg-danger">Rx</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">OTC</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (drug.IsCritical)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Critical</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (drug.IsActive)
+                                    {
+                                        <span class="status-badge status-healthy">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Admin/EditDrug/@drug.Id" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger"
+                                                data-mt-swal-message="Remove this drug from the catalog? Existing inventory will not be affected."
+                                                data-mt-swal-title="Remove drug"
+                                                data-mt-swal-icon="warning"
+                                                data-mt-swal-danger="true"
+                                                data-mt-swal-confirm-text="Remove"
+                                                data-mt-swal-success="Drug removed from catalog"
+                                                data-bs-toggle="tooltip" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Drugs.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Id = 1, Generic = "Amoxicillin", Scientific = "Amoxicillin Trihydrate", Brands = "Amoxil, Trimox, Moxatag", Category = "Antibiotics", Min = 20, Unit = "Capsules", Rx = true, Critical = true, Active = true },
+                                new { Id = 2, Generic = "Metformin", Scientific = "Metformin Hydrochloride", Brands = "Glucophage, Fortamet, Riomet", Category = "Diabetes", Min = 50, Unit = "Tablets", Rx = true, Critical = true, Active = true },
+                                new { Id = 3, Generic = "Paracetamol", Scientific = "Acetaminophen", Brands = "Panadol, Tylenol, Calpol", Category = "Pain Relief", Min = 100, Unit = "Tablets", Rx = false, Critical = false, Active = true },
+                                new { Id = 4, Generic = "Atorvastatin", Scientific = "Atorvastatin Calcium", Brands = "Lipitor, Torvast", Category = "Cardiovascular", Min = 30, Unit = "Tablets", Rx = true, Critical = true, Active = true },
+                                new { Id = 5, Generic = "Omeprazole", Scientific = "Omeprazole Magnesium", Brands = "Prilosec, Losec", Category = "Gastrointestinal", Min = 25, Unit = "Capsules", Rx = false, Critical = false, Active = true },
+                                new { Id = 6, Generic = "Insulin Glargine", Scientific = "Insulin Glargine Recombinant", Brands = "Lantus, Basaglar, Toujeo", Category = "Diabetes", Min = 10, Unit = "Vials", Rx = true, Critical = true, Active = true },
+                                new { Id = 7, Generic = "Salbutamol", Scientific = "Albuterol Sulfate", Brands = "Ventolin, ProAir, Proventil", Category = "Respiratory", Min = 15, Unit = "Inhalers", Rx = true, Critical = true, Active = true },
+                                new { Id = 8, Generic = "Vitamin D3", Scientific = "Cholecalciferol", Brands = "D-Vita, Cal-D", Category = "Vitamins", Min = 50, Unit = "Tablets", Rx = false, Critical = false, Active = true }
+                            })
+                            {
+                                <tr data-category="@demo.Category">
+                                    <td><code>#@demo.Id</code></td>
+                                    <td>
+                                        <div class="fw-bold">@demo.Generic</div>
+                                        <small class="text-muted">@demo.Scientific</small>
+                                    </td>
+                                    <td>@demo.Brands</td>
+                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@demo.Category</span></td>
+                                    <td class="fw-bold">@demo.Min</td>
+                                    <td>@demo.Unit</td>
+                                    <td>
+                                        @if (demo.Rx)
+                                        {
+                                            <span class="badge bg-danger">Rx</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">OTC</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (demo.Critical)
+                                        {
+                                            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Critical</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (demo.Active)
+                                        {
+                                            <span class="status-badge status-healthy">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/Admin/EditDrug/@demo.Id" class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    data-mt-swal-message="Remove this drug from the catalog? Existing inventory will not be affected."
+                                                    data-mt-swal-title="Remove drug"
+                                                    data-mt-swal-icon="warning"
+                                                    data-mt-swal-danger="true"
+                                                    data-mt-swal-confirm-text="Remove"
+                                                    data-mt-swal-success="Drug removed from catalog"
+                                                    data-bs-toggle="tooltip" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $('.gov-pill').on('click', function() {
+            $('.gov-pill').removeClass('active');
+            $(this).addClass('active');
+            var cat = $(this).data('cat');
+            if (!cat) {
+                $('#drugsTable tbody tr').show();
+            } else {
+                $('#drugsTable tbody tr').each(function() {
+                    $(this).toggle($(this).data('category') === cat);
+                });
+            }
+        });
+    </script>
+}

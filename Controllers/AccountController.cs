@@ -1,194 +1,221 @@
-﻿using Microsoft.AspNetCore.Identity;
+using MedTrack.Data;
+using MedTrack.Models;
+using MedTrack.Models.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using MedTrackJordan.Models;
-using MedTrackJordan.ViewModels;
+using System.Linq;
+using System.Collections.Generic;
+using System.Security.Claims;
+using ApplicationUser = MedTrack.Models.ApplicationUser;
 
-namespace MedTrackJordan.Controllers
+namespace MedTrack.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ApplicationDbContext _context;
 
         public AccountController(
-            UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            RoleManager<IdentityRole> roleManager)
+            UserManager<ApplicationUser> userManager,
+            ApplicationDbContext context)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
-            _roleManager = roleManager;
+            _userManager = userManager;
+            _context = context;
         }
 
-        // ── Login ────────────────────────────────────────────────────────
-        [HttpGet]
-        public IActionResult Login(string? returnUrl = null)
-        {
-            if (User.Identity!.IsAuthenticated)
-                return RedirectToAction("Index", "Home");
-
-            ViewData["ReturnUrl"] = returnUrl;
-            return View();
-        }
+        public IActionResult Login() => View(new LoginViewModel());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var result = await _signInManager.PasswordSignInAsync(
-                model.Email,
-                model.Password,
-                model.RememberMe,
-                lockoutOnFailure: true);
+                model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
 
-            if (result.Succeeded)
-                return LocalRedirect(returnUrl ?? "/");
-
-            if (result.IsLockedOut)
+            if (!result.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "Account locked. Try again in 10 minutes.");
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
                 return View(model);
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid email or password.");
-            return View(model);
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !user.IsActive)
+            {
+                await _signInManager.SignOutAsync();
+                ModelState.AddModelError(string.Empty, "Invalid email or password.");
+                return View(model);
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Count == 0)
+            {
+                await _signInManager.SignOutAsync();
+                ModelState.AddModelError(string.Empty, "Your account has no assigned role. Please contact an administrator.");
+                return View(model);
+            }
+
+            var extraClaims = new List<Claim>();
+            if (user.PharmacyId.HasValue)
+                extraClaims.Add(new Claim("PharmacyId", user.PharmacyId.Value.ToString()));
+
+            await _signInManager.SignOutAsync();
+            await _signInManager.SignInWithClaimsAsync(user, model.RememberMe, extraClaims);
+
+            return RedirectForRole(roles.FirstOrDefault());
         }
 
-        // ── Register ─────────────────────────────────────────────────────
-        [HttpGet]
-        public IActionResult Register()
+        private IActionResult RedirectForRole(string? role) => role switch
         {
-            if (User.Identity!.IsAuthenticated)
-                return RedirectToAction("Index", "Home");
+            "System Admin" => RedirectToAction("Index", "Admin"),
+            "MOH Admin" => RedirectToAction("Dashboard", "MOH"),
+            "Distributor" => RedirectToAction("Index", "Distributor"),
+            _ => RedirectToAction("Index", "Dashboard")
+        };
 
-            return View();
-        }
+        public IActionResult Register() => View(new RegisterViewModel());
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+
+            if (await _userManager.FindByEmailAsync(model.Email) != null)
+            {
+                ModelState.AddModelError(nameof(model.Email), "An account with this email already exists.");
                 return View(model);
+            }
+
+            var role = model.Role switch
+            {
+                "Pharmacy Staff" => "Pharmacy Staff",
+                "Distributor" => "Distributor",
+                _ => "Pharmacy Manager"
+            };
 
             var user = new ApplicationUser
             {
                 UserName = model.Email,
                 Email = model.Email,
                 FullName = model.FullName,
-                EmailConfirmed = true
+                EmailConfirmed = true,
+                IsActive = true
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, "PharmacyStaff");
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return RedirectToAction("Index", "Home");
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+                return View(model);
             }
 
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
+            await _userManager.AddToRoleAsync(user, role);
 
-            return View(model);
+            if (role is "Pharmacy Staff" or "Pharmacy Manager")
+            {
+                var pharmacy = new Pharmacy
+                {
+                    Name = model.PharmacyName ?? $"{model.FullName}'s Pharmacy",
+                    LicenseNo = model.LicenseNo ?? $"MOH-PENDING-{DateTime.UtcNow:yyyyMMdd}",
+                    Governorate = model.Governorate ?? "Amman",
+                    Address = model.Address ?? "",
+                    Phone = model.Phone ?? "",
+                    ContactEmail = model.Email,
+                    IsApproved = false,
+                    IsActive = true
+                };
+                _context.Pharmacies.Add(pharmacy);
+                await _context.SaveChangesAsync();
+                user.PharmacyId = pharmacy.Id;
+                await _userManager.UpdateAsync(user);
+            }
+
+            var claims = new List<Claim>();
+            if (user.PharmacyId.HasValue)
+                claims.Add(new Claim("PharmacyId", user.PharmacyId.Value.ToString()));
+
+            await _signInManager.SignInWithClaimsAsync(user, isPersistent: false, claims);
+            return RedirectForRole(role);
         }
 
-        // ── Logout ───────────────────────────────────────────────────────
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize]
         public async Task<IActionResult> Logout()
         {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
+            await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return RedirectToAction("Index", "Home");
         }
 
-        // ── Access Denied ────────────────────────────────────────────────
-        [HttpGet]
-        public IActionResult AccessDenied()
-        {
-            return View();
-        }
-
-        // ── Profile ──────────────────────────────────────────────────────
-        [HttpGet]
-        [Authorize]
         public async Task<IActionResult> Profile()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
+            if (user == null) return RedirectToAction(nameof(Login));
 
             var roles = await _userManager.GetRolesAsync(user);
-
             var model = new ProfileViewModel
             {
-                FullName = user.FullName ?? string.Empty,
-                Email = user.Email ?? string.Empty,
-                Role = roles.FirstOrDefault() ?? "No Role"
+                FullName = user.FullName,
+                Email = user.Email ?? "",
+                Role = roles.FirstOrDefault() ?? "User"
             };
-
             return View(model);
         }
 
         [HttpPost]
-        [Authorize]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Profile(ProfileViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
+            if (user == null) return RedirectToAction(nameof(Login));
 
             user.FullName = model.FullName;
             await _userManager.UpdateAsync(user);
-
             TempData["Success"] = "Profile updated successfully.";
-            return RedirectToAction("Profile");
+            return RedirectToAction(nameof(Profile));
         }
-
-        // ── Change Password ───────────────────────────────────────────────
-        [HttpGet]
-        [Authorize]
-        public IActionResult ChangePassword()
-        {
-            return View();
-        }
+        public IActionResult Settings() => View();
+        public IActionResult ForgotPassword() => View();
 
         [HttpPost]
-        [Authorize]
+        [ValidateAntiForgeryToken]
+        public IActionResult ForgotPassword(string email)
+        {
+            TempData["Success"] = "If an account exists for that email, a reset link has been sent.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        public IActionResult ChangePassword() => View(new ChangePasswordViewModel());
+
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return RedirectToAction("Login");
+            if (user == null) return RedirectToAction(nameof(Login));
 
-            var result = await _userManager.ChangePasswordAsync(
-                user, model.CurrentPassword, model.NewPassword);
-
-            if (result.Succeeded)
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            if (!result.Succeeded)
             {
-                await _signInManager.RefreshSignInAsync(user);
-                TempData["Success"] = "Password changed successfully.";
-                return RedirectToAction("Profile");
+                foreach (var error in result.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+                return View(model);
             }
 
-            foreach (var error in result.Errors)
-                ModelState.AddModelError(string.Empty, error.Description);
-
-            return View(model);
+            TempData["Success"] = "Password updated successfully.";
+            return RedirectToAction(nameof(Profile));
         }
+
+        public IActionResult AccessDenied() => View();
     }
 }

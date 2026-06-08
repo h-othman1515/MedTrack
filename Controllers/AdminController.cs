@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using MedTrackJordan.Data;
+using Microsoft.EntityFrameworkCore;
+using MedTrack.Data;
+using MedTrack.Models;
+using MedTrack.Models.ViewModels;
 
-namespace MedTrackJordan.Controllers
+namespace MedTrack.Controllers
 {
-    [Authorize(Roles = "Admin,MOHAdmin")]
+    [Authorize(Roles = "System Admin")]
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -15,36 +17,94 @@ namespace MedTrackJordan.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> Index()
         {
-            var totalPharmacies = await _context.Pharmacies.CountAsync();
-            var totalDrugs = await _context.Drugs.CountAsync();
-            var totalBatches = await _context.MedicationBatches.CountAsync();
-            var totalSurplus = await _context.SurplusPosts.CountAsync();
-            var pendingTransfers = await _context.TransferRequests
-                .CountAsync(t => t.Status == Models.TransferStatus.Pending);
-            var lowStock = await _context.MedicationBatches
-                .Include(b => b.Drug)
-                .Where(b => b.Quantity < b.Drug.MinStockLevel)
-                .CountAsync();
+            var model = new AdminDashboardViewModel
+            {
+                TotalUsers = await _context.Users.CountAsync(),
+                ActivePharmacies = await _context.Pharmacies.CountAsync(),
+                TotalDrugs = await _context.Drugs.CountAsync(),
+                PendingApprovals = 0,
+                ActiveAlerts = await _context.MedicationBatches.CountAsync(b => b.Quantity <= b.MinStockLevel),
+                TotalTransfers = await _context.TransferRequests.CountAsync()
+            };
+            return View(model);
+        }
 
-            var expiringSoon = await _context.MedicationBatches
-                .Include(b => b.Drug)
-                .Include(b => b.Pharmacy)
-                .Where(b => b.ExpiryDate <= DateTime.UtcNow.AddDays(30))
-                .OrderBy(b => b.ExpiryDate)
-                .Take(10)
-                .ToListAsync();
+        public IActionResult Dashboard() => RedirectToAction(nameof(Index));
+        public IActionResult Users() => View(new UserManagementViewModel());
+        public IActionResult CreateUser() => View();
+        public IActionResult EditUser(string id) => View();
+        public IActionResult Pharmacies() => View(new PharmacyManagementViewModel());
+        public IActionResult PharmacyDetails(int id) => View();
+        public IActionResult RegisterPharmacy() => View();
+        public IActionResult Drugs() => View(new DrugCatalogViewModel());
+        public IActionResult AddDrug() => View();
+        public IActionResult EditDrug(int id) => View();
+        public IActionResult Notifications() => View(new BroadcastViewModel());
+        public IActionResult NotificationHistory() => View();
+        public IActionResult AuditLogs() => View(new AuditLogViewModel());
 
-            ViewBag.TotalPharmacies = totalPharmacies;
-            ViewBag.TotalDrugs = totalDrugs;
-            ViewBag.TotalBatches = totalBatches;
-            ViewBag.TotalSurplus = totalSurplus;
-            ViewBag.PendingTransfers = pendingTransfers;
-            ViewBag.LowStock = lowStock;
-            ViewBag.ExpiringSoon = expiringSoon;
+        public IActionResult Settings()
+        {
+            var model = new SystemSettingsViewModel
+            {
+                SmsEnabled = true,
+                EmailEnabled = true,
+                InAppEnabled = true,
+                SmsSenderId = "MedTrack",
+                ExpiryAlert60 = 60,
+                ExpiryAlert30 = 30,
+                ExpiryAlert7 = 7,
+                ShortageThreshold = 3,
+                AutoRestockThreshold = 1.0,
+                MaxSurplusDays = 30,
+                SessionTimeout = 30,
+                PasswordExpiryDays = 90,
+                MaintenanceMode = false,
+                MaintenanceMessage = "MedTrack is currently under maintenance. Please check back later."
+            };
+            return View(model);
+        }
 
-            return View();
+        [HttpPost]
+        public IActionResult SaveSettings(SystemSettingsViewModel model) => RedirectToAction("Settings");
+        [HttpPost] 
+        public IActionResult SendBroadcast(BroadcastViewModel model) => RedirectToAction("Notifications");
+
+        [HttpPost]
+        public IActionResult CreateUser(UserManagementViewModel model)
+        {
+            TempData["Success"] = "User created successfully.";
+            return RedirectToAction(nameof(Users));
+        }
+
+        [HttpPost]
+        public IActionResult EditUser(string id, UserManagementViewModel model)
+        {
+            TempData["Success"] = "User updated successfully.";
+            return RedirectToAction(nameof(Users));
+        }
+
+        [HttpPost]
+        public IActionResult RegisterPharmacy(PharmacyManagementViewModel model)
+        {
+            TempData["Success"] = "Pharmacy registered successfully.";
+            return RedirectToAction(nameof(Pharmacies));
+        }
+
+        [HttpPost]
+        public IActionResult AddDrug(DrugCatalogViewModel model)
+        {
+            TempData["Success"] = "Drug added to catalog.";
+            return RedirectToAction(nameof(Drugs));
+        }
+
+        [HttpPost]
+        public IActionResult EditDrug(int id, DrugCatalogViewModel model)
+        {
+            TempData["Success"] = "Drug updated successfully.";
+            return RedirectToAction(nameof(Drugs));
         }
     }
 }

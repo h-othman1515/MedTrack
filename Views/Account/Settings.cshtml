@@ -1,0 +1,57 @@
+@{
+    ViewData["Title"] = "Settings";
+    ViewData["PageIcon"] = "bi-gear";
+    ViewData["Subtitle"] = "Manage your account preferences and notifications";
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-person me-2 text-primary"></i>Account</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Display Name</label>
+                        <input class="form-control" value="@(User.Identity?.Name ?? "User")" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Language</label>
+                        <select class="form-select">
+                            <option>English</option>
+                            <option>العربية</option>
+                        </select>
+                    </div>
+                    <a href="/Account/ChangePassword" class="btn btn-outline-secondary">
+                        <i class="bi bi-key me-1"></i> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bell me-2 text-warning"></i>Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="emailNotif" checked />
+                        <label class="form-check-label" for="emailNotif">Email notifications</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="expiryNotif" checked />
+                        <label class="form-check-label" for="expiryNotif">Expiry alerts</label>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="shortageNotif" checked />
+                        <label class="form-check-label" for="shortageNotif">Shortage alerts</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

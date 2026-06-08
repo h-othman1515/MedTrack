@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
-using MedTrackJordan.Data;
-using MedTrackJordan.Models;
+using MedTrack.Data;
+using MedTrack.Models;
 
-namespace MedTrackJordan.Controllers
+namespace MedTrack.Controllers
 {
-    [Authorize(Roles = "Admin,PharmacyManager,MOHAdmin")]
+    [Authorize(Roles = "System Admin,Pharmacy Manager,MOH Admin")]
     public class PharmacyController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -25,7 +25,7 @@ namespace MedTrackJordan.Controllers
         {
             if (id == null) return NotFound();
             var pharmacy = await _context.Pharmacies
-                .Include(p => p.Users)
+                .Include(p => p.Staff)
                 .Include(p => p.MedicationBatches)
                 .ThenInclude(b => b.Drug)
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -33,10 +33,10 @@ namespace MedTrackJordan.Controllers
             return View(pharmacy);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         public IActionResult Create() => View();
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Pharmacy pharmacy)
@@ -51,7 +51,7 @@ namespace MedTrackJordan.Controllers
             return View(pharmacy);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -60,7 +60,7 @@ namespace MedTrackJordan.Controllers
             return View(pharmacy);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Pharmacy pharmacy)
@@ -84,7 +84,7 @@ namespace MedTrackJordan.Controllers
             return View(pharmacy);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -93,7 +93,7 @@ namespace MedTrackJordan.Controllers
             return View(pharmacy);
         }
 
-        [Authorize(Roles = "Admin,MOHAdmin")]
+        [Authorize(Roles = "System Admin,MOH Admin")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

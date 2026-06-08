@@ -1,0 +1,85 @@
+﻿<link rel="stylesheet" href="~/css/sidebar.css" />
+
+<aside class="mt-sidebar" id="appSidebar">
+
+    <!-- Header -->
+    <div class="sidebar-header">
+        <a href="/Admin" class="sidebar-brand">
+            <span class="admin-crown">⚙</span>
+            <span class="sidebar-brand-text">
+                MedTrack
+                <span class="sidebar-brand-sub d-block">Admin Panel</span>
+            </span>
+        </a>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseDesktop" title="Collapse sidebar" aria-label="Collapse sidebar">
+            <i class="bi bi-layout-sidebar-reverse"></i>
+        </button>
+    </div>
+
+    <!-- Nav -->
+    <nav class="sidebar-nav" aria-label="Admin navigation">
+
+        <div class="sb-section-label">Overview</div>
+        <a href="/Admin"
+           class="sidebar-link admin-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+            <i class="bi bi-speedometer2"></i>
+            <span class="sb-label">Dashboard</span>
+        </a>
+
+        <div class="sb-section-label">Management</div>
+        <a href="/Admin/Users"
+           class="sidebar-link @(new[] { "Users", "EditUser", "CreateUser" }.Contains(ViewContext.RouteData.Values["Action"]?.ToString()) ? "active" : "")">
+            <i class="bi bi-people"></i>
+            <span class="sb-label">User Management</span>
+        </a>
+        <a href="/Admin/Pharmacies"
+           class="sidebar-link @(new[] { "Pharmacies", "PharmacyDetails" }.Contains(ViewContext.RouteData.Values["Action"]?.ToString()) ? "active" : "")">
+            <i class="bi bi-shop"></i>
+            <span class="sb-label">Pharmacies</span>
+        </a>
+        <a href="/Admin/Drugs"
+           class="sidebar-link @(new[] { "Drugs", "EditDrug", "AddDrug" }.Contains(ViewContext.RouteData.Values["Action"]?.ToString()) ? "active" : "")">
+            <i class="bi bi-capsule-pill"></i>
+            <span class="sb-label">Drug Catalog</span>
+        </a>
+
+        <div class="sb-section-label">Operations</div>
+        <a href="/Admin/Notifications"
+           class="sidebar-link @(new[] { "Notifications", "NotificationHistory" }.Contains(ViewContext.RouteData.Values["Action"]?.ToString()) ? "active" : "")">
+            <i class="bi bi-broadcast"></i>
+            <span class="sb-label">Broadcast</span>
+            <span class="sb-badge">New</span>
+        </a>
+        <a href="/Admin/AuditLogs"
+           class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "AuditLogs" ? "active" : "")">
+            <i class="bi bi-journal-text"></i>
+            <span class="sb-label">Audit Logs</span>
+        </a>
+
+        <div class="sidebar-divider"></div>
+
+        <div class="sb-section-label">System</div>
+        <a href="/Admin/Settings"
+           class="sidebar-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Settings" ? "active" : "")">
+            <i class="bi bi-gear"></i>
+            <span class="sb-label">Settings</span>
+        </a>
+        <a href="/MOH/Dashboard" class="sidebar-link">
+            <i class="bi bi-graph-up-arrow"></i>
+            <span class="sb-label">MOH Dashboard</span>
+        </a>
+
+    </nav>
+
+    <!-- Footer / user card -->
+    <div class="sidebar-footer">
+        <a href="/Account/Profile" class="sidebar-user-card">
+            <div class="admin-avatar">SA</div>
+            <div class="sidebar-user-info">
+                <div class="sidebar-user-name">@(User.Identity?.Name ?? "Admin")</div>
+                <span class="admin-role-badge"><i class="bi bi-shield-fill" style="font-size:.55rem"></i> System Admin</span>
+            </div>
+        </a>
+    </div>
+
+</aside>

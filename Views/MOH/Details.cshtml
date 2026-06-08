@@ -1,0 +1,158 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    var governorate = ViewBag.Governorate as string ?? "Amman";
+    ViewData["Title"] = $"{governorate} — Shortage Details";
+    Layout = "_Layout";
+    var hotspot = Model.ShortageHotspots.FirstOrDefault(h => h.Governorate == governorate);
+    var activeShortages = hotspot?.ActiveShortages ?? 0;
+    var pharmaciesAffected = hotspot?.PharmaciesAffected ?? 0;
+    var severity = hotspot?.Severity ?? "Medium";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/MOH/Shortages" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left me-1"></i>Back to Shortage Map
+            </a>
+            <h2 class="fw-bold mb-1 mt-2">@governorate Governorate</h2>
+            <p class="text-muted mb-0">Regional shortage breakdown and affected pharmacies</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/MOH/Reports" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Export Report</a>
+            <a href="/MOH/Dashboard" class="btn btn-primary"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold text-danger mb-1">@activeShortages</h3>
+                    <small class="text-muted">Active Shortages</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold text-warning mb-1">@pharmaciesAffected</h3>
+                    <small class="text-muted">Pharmacies Affected</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h3 class="fw-bold text-info mb-1">@severity</h3>
+                    <small class="text-muted">Severity Level</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Short Medications in @governorate</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Category</th>
+                            <th>Pharmacies Below Min</th>
+                            <th>Est. Units Needed</th>
+                            <th>Urgency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var drug in Model.TopShortages.Take(8))
+                        {
+                            var urgency = drug.PharmaciesShort >= 5 ? "Critical" : drug.PharmaciesShort >= 3 ? "High" : "Medium";
+                            <tr>
+                                <td class="fw-bold">@drug.DrugName</td>
+                                <td>@drug.Category</td>
+                                <td>@drug.PharmaciesShort</td>
+                                <td>@(drug.PharmaciesShort * 50)</td>
+                                <td>
+                                    <span class="badge bg-@(urgency == "Critical" ? "danger" : urgency == "High" ? "warning text-dark" : "info")">
+                                        @urgency
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.TopShortages.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Drug = "Insulin Glargine", Category = "Diabetes", Pharmacies = 4, Units = 120, Urgency = "Critical" },
+                                new { Drug = "Amoxicillin 500mg", Category = "Antibiotics", Pharmacies = 3, Units = 450, Urgency = "High" },
+                                new { Drug = "Metformin 850mg", Category = "Diabetes", Pharmacies = 2, Units = 200, Urgency = "Medium" }
+                            })
+                            {
+                                <tr>
+                                    <td class="fw-bold">@demo.Drug</td>
+                                    <td>@demo.Category</td>
+                                    <td>@demo.Pharmacies</td>
+                                    <td>@demo.Units</td>
+                                    <td><span class="badge bg-@(demo.Urgency == "Critical" ? "danger" : demo.Urgency == "High" ? "warning text-dark" : "info")">@demo.Urgency</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-white">
+            <h5 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2"></i>Recent Transfer Activity</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Quantity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var activity in Model.TransferActivity.Take(5))
+                        {
+                            <tr>
+                                <td>@activity.Month</td>
+                                <td colspan="2">Regional transfers</td>
+                                <td>@activity.TransfersCompleted</td>
+                                <td>@activity.Month</td>
+                                <td><span class="badge bg-success">Completed</span></td>
+                            </tr>
+                        }
+                        @if (!Model.TransferActivity.Any())
+                        {
+                            @foreach (var demo in new[] {
+                                new { Month = "Jun 2026", Transfers = 12, Value = 840m },
+                                new { Month = "May 2026", Transfers = 9, Value = 620m }
+                            })
+                            {
+                                <tr>
+                                    <td>@demo.Month</td>
+                                    <td colspan="2">@governorate region</td>
+                                    <td>@demo.Transfers</td>
+                                    <td>@demo.Month</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

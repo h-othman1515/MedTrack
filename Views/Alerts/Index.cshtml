@@ -1,0 +1,349 @@
+@model MedTrack.Models.ViewModels.AlertsIndexViewModel
+@{
+    ViewData["Title"] = "Alerts";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-bell me-2"></i>Alert Center</h2>
+            <p class="text-muted mb-0">Manage expiry warnings, shortage alerts, and notifications</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form asp-action="MarkAllRead" method="post" class="d-inline"
+                  data-mt-swal-confirm="Mark all alerts as read?"
+                  data-mt-swal-title="Mark all read">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="bi bi-check-all me-1"></i>Mark All Read
+                </button>
+            </form>
+            <form asp-action="ClearAcknowledged" method="post" class="d-inline"
+                  data-mt-swal-confirm="Clear all acknowledged alerts? This cannot be undone."
+                  data-mt-swal-title="Clear acknowledged alerts"
+                  data-mt-swal-icon="warning"
+                  data-mt-swal-danger="true"
+                  data-mt-swal-confirm-text="Clear all">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash me-1"></i>Clear All
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Unread Expiry Alerts</p>
+                            <h3 class="fw-bold mb-0">@Model.ExpiryAlerts.Count(a => !a.IsAcknowledged)</h3>
+                            <small class="text-danger">Requires attention</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Unread Shortage Alerts</p>
+                            <h3 class="fw-bold mb-0">@Model.ShortageAlerts.Count(a => !a.IsAcknowledged)</h3>
+                            <small class="text-warning">Below minimum stock</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-dash-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Restock Requests</p>
+                            <h3 class="fw-bold mb-0">@Model.RestockAlerts.Count(a => !a.IsAcknowledged)</h3>
+                            <small class="text-info">Pending distributor action</small>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 text-info">
+                            <i class="bi bi-box-arrow-in-down"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Transfer Updates</p>
+                            <h3 class="fw-bold mb-0">@Model.TransferAlerts.Count(a => !a.IsAcknowledged)</h3>
+                            <small class="text-success">Inter-pharmacy activity</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Tabs -->
+    <div class="card">
+        <div class="card-header bg-white p-0">
+            <ul class="nav nav-tabs" id="alertTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="expiry-tab" data-bs-toggle="tab" data-bs-target="#expiry" type="button">
+                        <i class="bi bi-exclamation-triangle text-danger me-1"></i>Expiry
+                        <span class="badge bg-danger ms-1">@Model.ExpiryAlerts.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shortage-tab" data-bs-toggle="tab" data-bs-target="#shortage" type="button">
+                        <i class="bi bi-dash-circle text-warning me-1"></i>Shortages
+                        <span class="badge bg-warning text-dark ms-1">@Model.ShortageAlerts.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="restock-tab" data-bs-toggle="tab" data-bs-target="#restock" type="button">
+                        <i class="bi bi-box-arrow-in-down text-info me-1"></i>Restock
+                        <span class="badge bg-info ms-1">@Model.RestockAlerts.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer" type="button">
+                        <i class="bi bi-arrow-left-right text-success me-1"></i>Transfers
+                        <span class="badge bg-success ms-1">@Model.TransferAlerts.Count</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="alertTabContent">
+                <!-- Expiry Alerts -->
+                <div class="tab-pane fade show active" id="expiry" role="tabpanel">
+                    @if (Model.ExpiryAlerts.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var alert in Model.ExpiryAlerts)
+                            {
+                                <div class="list-group-item alert-item expiry p-3 @(alert.IsAcknowledged ? "bg-light" : "")">
+                                    <div class="d-flex">
+                                        <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-calendar-x fs-4"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">@alert.DrugName <span class="text-muted">(@alert.BatchNo)</span></h6>
+                                                    <p class="mb-1">@alert.Message</p>
+                                                    <div class="d-flex gap-2 mt-2">
+                                                        @if (alert.SuggestedAction == "Surplus")
+                                                        {
+                                                            <a href="/Surplus/Create@(alert.DrugId.HasValue ? $"?drugId={alert.DrugId}" : "")" class="btn btn-sm btn-outline-success">
+                                                                <i class="bi bi-arrow-up-circle me-1"></i>List as Surplus
+                                                            </a>
+                                                        }
+                                                        else if (alert.SuggestedAction == "Donate")
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-primary">
+                                                                <i class="bi bi-heart me-1"></i>Find Donation Center
+                                                            </button>
+                                                        }
+                                                        else if (alert.SuggestedAction == "Dispose")
+                                                        {
+                                                            <button class="btn btn-sm btn-outline-dark">
+                                                                <i class="bi bi-trash me-1"></i>Log Disposal
+                                                            </button>
+                                                        }
+                                                        @if (alert.BatchId.HasValue)
+                                                        {
+                                                            <a href="/Inventory/Edit/@alert.BatchId" class="btn btn-sm btn-outline-secondary">
+                                                                <i class="bi bi-pencil me-1"></i>Edit Stock
+                                                            </a>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    <span class="badge bg-danger">@alert.Level days</span>
+                                                    <small class="d-block text-muted mt-1">@alert.SentAt.ToString("MMM dd, HH:mm")</small>
+                                                    <small class="d-block text-muted">via @alert.Channel</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if (!alert.IsAcknowledged)
+                                    {
+                                        <div class="text-end mt-2">
+                                            <form asp-action="Acknowledge" asp-route-id="@alert.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-check-lg me-1"></i>Acknowledge
+                                                </button>
+                                            </form>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-check-circle empty-state-icon text-success"></i>
+                            <h5>No Expiry Alerts</h5>
+                            <p class="text-muted">All medications are within safe expiry ranges.</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Shortage Alerts -->
+                <div class="tab-pane fade" id="shortage" role="tabpanel">
+                    @if (Model.ShortageAlerts.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var alert in Model.ShortageAlerts)
+                            {
+                                <div class="list-group-item alert-item shortage p-3">
+                                    <div class="d-flex">
+                                        <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-exclamation-triangle fs-4"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">@alert.DrugName</h6>
+                                                    <p class="mb-1">@alert.Message</p>
+                                                    <div class="d-flex gap-2 mt-2">
+                                                        <a href="/Surplus?SearchTerm=@Uri.EscapeDataString(alert.DrugName)" class="btn btn-sm btn-outline-success">
+                                                            <i class="bi bi-search me-1"></i>Find Surplus
+                                                        </a>
+                                                        <button class="btn btn-sm btn-sos" data-drug="@alert.DrugName">
+                                                            <i class="bi bi-broadcast me-1"></i>SOS Alert
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    <span class="badge bg-warning text-dark">@alert.Level</span>
+                                                    <small class="d-block text-muted mt-1">@alert.SentAt.ToString("MMM dd, HH:mm")</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-check-circle empty-state-icon text-success"></i>
+                            <h5>No Shortage Alerts</h5>
+                            <p class="text-muted">Stock levels are adequate across all medications.</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Restock Alerts -->
+                <div class="tab-pane fade" id="restock" role="tabpanel">
+                    @if (Model.RestockAlerts.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var alert in Model.RestockAlerts)
+                            {
+                                <div class="list-group-item alert-item restock p-3">
+                                    <div class="d-flex">
+                                        <div class="bg-info bg-opacity-10 text-info rounded-3 p-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-box-arrow-in-down fs-4"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">@alert.DrugName</h6>
+                                                    <p class="mb-1">@alert.Message</p>
+                                                    <div class="d-flex gap-2 mt-2">
+                                                        <a href="/Distributor/RestockRequests" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-truck me-1"></i>View Request
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    <span class="badge bg-info">@alert.Level</span>
+                                                    <small class="d-block text-muted mt-1">@alert.SentAt.ToString("MMM dd, HH:mm")</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-check-circle empty-state-icon text-success"></i>
+                            <h5>No Restock Alerts</h5>
+                            <p class="text-muted">All items are above minimum thresholds.</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Transfer Alerts -->
+                <div class="tab-pane fade" id="transfer" role="tabpanel">
+                    @if (Model.TransferAlerts.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var alert in Model.TransferAlerts)
+                            {
+                                <div class="list-group-item alert-item transfer p-3">
+                                    <div class="d-flex">
+                                        <div class="bg-success bg-opacity-10 text-success rounded-3 p-3 me-3" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="bi bi-arrow-left-right fs-4"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">@alert.DrugName</h6>
+                                                    <p class="mb-1">@alert.Message</p>
+                                                    <div class="d-flex gap-2 mt-2">
+                                                        <a href="/Transfer" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-eye me-1"></i>View Transfer
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <div class="text-end ms-3">
+                                                    <span class="badge bg-success">@alert.Level</span>
+                                                    <small class="d-block text-muted mt-1">@alert.SentAt.ToString("MMM dd, HH:mm")</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="bi bi-check-circle empty-state-icon text-success"></i>
+                            <h5>No Transfer Updates</h5>
+                            <p class="text-muted">No recent transfer activity.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
