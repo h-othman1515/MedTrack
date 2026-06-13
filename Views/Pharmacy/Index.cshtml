@@ -1,0 +1,187 @@
+﻿@model IEnumerable<MedTrack.Models.Pharmacy>
+@{
+    ViewData["Title"] = "Pharmacies";
+    ViewData["Subtitle"] = "Registered pharmacies across Jordan";
+    ViewData["PageIcon"] = "bi-shop";
+    var list = Model.ToList();
+    var byGov = list.GroupBy(p => p.Governorate).OrderByDescending(g => g.Count()).ToList();
+    var topGov = byGov.FirstOrDefault();
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-shop me-2"></i>Pharmacies</h2>
+            <p class="text-muted mb-0">Registered pharmacies across Jordan</p>
+        </div>
+        @if (User.IsInRole("System Admin") || User.IsInRole("MOH Admin"))
+        {
+            <a asp-action="Create" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Add Pharmacy
+            </a>
+        }
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@list.Count</div>
+                <div class="small text-muted">Total Pharmacies</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-info">@byGov.Count</div>
+                <div class="small text-muted">Governorates</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-5 fw-bold text-success">@(topGov?.Key ?? "—")</div>
+                <div class="small text-muted">Most Pharmacies</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@(topGov?.Count() ?? 0)</div>
+                <div class="small text-muted">In Top Governorate</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Name, license, governorate...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Governorate</label>
+                    <select class="form-select" id="filterGovernorate">
+                        <option value="">All Governorates</option>
+                        @foreach (var gov in list.Select(p => p.Governorate).Distinct().OrderBy(g => g))
+                        {
+                            <option value="@gov">@gov</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="pharmacyTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>License No</th>
+                            <th>Governorate</th>
+                            <th>Contact</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in list)
+                        {
+                            <tr data-governorate="@item.Governorate">
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold"
+                                             style="width:36px;height:36px;font-size:.85rem;flex-shrink:0">
+                                            @item.Name.Substring(0, 1).ToUpper()
+                                        </div>
+                                        <span class="fw-semibold">@item.Name</span>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-secondary">@item.LicenseNo</span></td>
+                                <td>
+                                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
+                                        @item.Governorate
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="small text-muted"><i class="bi bi-envelope me-1"></i>@item.ContactEmail</div>
+                                    <div class="small text-muted"><i class="bi bi-telephone me-1"></i>@item.Phone</div>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="View">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (User.IsInRole("System Admin") || User.IsInRole("MOH Admin"))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!list.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No pharmacies registered yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="rowCount">Showing @list.Count items</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var governorate = $('#filterGovernorate').val();
+            var visible = 0;
+
+            $('#pharmacyTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowGov = $row.data('governorate');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (governorate && rowGov !== governorate) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#filterGovernorate').val('');
+            $('#pharmacyTable tbody tr').show();
+            $('#rowCount').text('Showing @list.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+        $('#filterGovernorate').on('change', filterRows);
+    </script>
+}

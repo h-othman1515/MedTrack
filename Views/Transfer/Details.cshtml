@@ -1,0 +1,109 @@
+@model MedTrack.Models.ViewModels.TransferRequestViewModel
+@{
+    ViewData["Title"] = $"Transfer #{Model.Id}";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="mb-4">
+        <a href="/Transfer" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left me-1"></i>Back to Transfers
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2"></i>Transfer #@Model.Id</h4>
+                    @{
+                        var badgeClass = Model.Status switch
+                        {
+                            "Pending" => "bg-primary",
+                            "Confirmed" => "bg-info",
+                            "InTransit" => "bg-warning text-dark",
+                            "Completed" => "bg-success",
+                            "Cancelled" => "bg-secondary",
+                            _ => "bg-secondary"
+                        };
+                    }
+                    <span class="badge @badgeClass fs-6">@Model.Status</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted text-uppercase small fw-bold">Medication</h6>
+                            <p class="fs-5 fw-bold mb-1">@Model.DrugName</p>
+                            <p class="text-muted mb-0">@Model.Quantity units requested</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted text-uppercase small fw-bold">Timeline</h6>
+                            <p class="mb-1"><strong>Requested:</strong> @Model.RequestedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                            @if (Model.CompletedAt.HasValue)
+                            {
+                                <p class="mb-0 text-success"><strong>Completed:</strong> @Model.CompletedAt.Value.ToString("MMM dd, yyyy HH:mm")</p>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted text-uppercase small fw-bold">From (Supplier)</h6>
+                            <p class="fw-bold mb-0">@Model.FromPharmacy</p>
+                            <small class="text-muted">@Model.FromGovernorate</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted text-uppercase small fw-bold">To (Requesting)</h6>
+                            <p class="fw-bold mb-0">@Model.ToPharmacy</p>
+                            <small class="text-muted">@Model.ToGovernorate</small>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(Model.Notes))
+                        {
+                            <div class="col-12">
+                                <h6 class="text-muted text-uppercase small fw-bold">Notes</h6>
+                                <p class="mb-0">@Model.Notes</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6 class="fw-bold mb-0">Actions</h6>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    @if (Model.Status == "Pending")
+                    {
+                        <form asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="status" value="Confirmed" />
+                            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-lg me-1"></i>Approve</button>
+                        </form>
+                        <form asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="status" value="Cancelled" />
+                            <button type="submit" class="btn btn-outline-danger w-100"><i class="bi bi-x-lg me-1"></i>Cancel</button>
+                        </form>
+                    }
+                    @if (Model.Status == "Confirmed")
+                    {
+                        <form asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="status" value="InTransit" />
+                            <button type="submit" class="btn btn-warning w-100"><i class="bi bi-truck me-1"></i>Mark In Transit</button>
+                        </form>
+                    }
+                    @if (Model.Status == "InTransit")
+                    {
+                        <form asp-action="UpdateStatus" method="post">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <input type="hidden" name="status" value="Completed" />
+                            <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle me-1"></i>Mark Completed</button>
+                        </form>
+                    }
+                    <a href="/Surplus" class="btn btn-outline-primary"><i class="bi bi-search me-1"></i>Browse Surplus</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

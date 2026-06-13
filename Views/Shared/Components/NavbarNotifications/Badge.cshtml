@@ -1,0 +1,6 @@
+@model MedTrack.Models.ViewModels.NavbarNotificationsViewModel
+
+@if (Model.UnreadCount > 0)
+{
+    <span class="sidebar-badge" id="alertBadge">@Model.UnreadCount</span>
+}

@@ -1,0 +1,308 @@
+@model MedTrack.Models.ViewModels.PharmacyManagementViewModel
+@{
+    ViewData["Title"] = "Pharmacy Management";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-shop me-2"></i>Pharmacy Management</h2>
+            <p class="text-muted mb-0">Approve, monitor, and manage registered pharmacies</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="exportTableToCSV('pharmacyTable', 'pharmacies.csv')">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <a href="/Admin/RegisterPharmacy" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Register Pharmacy
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@Model.ActiveCount</div>
+                <div class="small text-muted">Active</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@Model.PendingCount</div>
+                <div class="small text-muted">Pending Approval</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@Model.SuspendedCount</div>
+                <div class="small text-muted">Suspended</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@Model.TotalCount</div>
+                <div class="small text-muted">Total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchPharmacies" placeholder="Pharmacy name or license...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterPharmacyStatus">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Governorate</label>
+                    <select class="form-select" id="filterPharmacyGov">
+                        <option value="">All Governorates</option>
+                        <option>Amman</option>
+                        <option>Irbid</option>
+                        <option>Zarqa</option>
+                        <option>Balqa</option>
+                        <option>Madaba</option>
+                        <option>Mafraq</option>
+                        <option>Karak</option>
+                        <option>Aqaba</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Tier</label>
+                    <select class="form-select" id="filterTier">
+                        <option value="">All Tiers</option>
+                        <option>Basic</option>
+                        <option>Professional</option>
+                        <option>Enterprise</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetPharmacyFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pharmacies Table -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="pharmacyTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" class="form-check-input" id="selectAllPharmacies"></th>
+                            <th>Pharmacy</th>
+                            <th>License</th>
+                            <th>Governorate</th>
+                            <th>Manager</th>
+                            <th>Tier</th>
+                            <th>Inventory</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pharmacy in Model.Pharmacies)
+                        {
+                            <tr data-status="@pharmacy.Status" data-governorate="@pharmacy.Governorate" data-tier="@pharmacy.Tier">
+                                <td><input type="checkbox" class="form-check-input row-checkbox"></td>
+                                <td>
+                                    <div class="fw-bold">@pharmacy.Name</div>
+                                    <small class="text-muted">@pharmacy.Email</small>
+                                </td>
+                                <td><code>@pharmacy.LicenseNo</code></td>
+                                <td>@pharmacy.Governorate</td>
+                                <td>@pharmacy.ManagerName</td>
+                                <td>
+                                    <span class="badge bg-@(pharmacy.Tier == "Enterprise" ? "dark" : pharmacy.Tier == "Professional" ? "primary" : "secondary")">
+                                        @pharmacy.Tier
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold">@pharmacy.InventoryCount</span>
+                                    <small class="text-muted">items</small>
+                                </td>
+                                <td>
+                                    @switch (pharmacy.Status)
+                                    {
+                                        case "Active":
+                                            <span class="status-badge status-healthy">Active</span>
+                                            break;
+                                        case "Pending":
+                                            <span class="status-badge status-warning">Pending</span>
+                                            break;
+                                        case "Suspended":
+                                            <span class="status-badge status-danger">Suspended</span>
+                                            break;
+                                        case "Rejected":
+                                            <span class="badge bg-secondary">Rejected</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>@pharmacy.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Admin/PharmacyDetails/@pharmacy.Id" class="btn btn-outline-secondary" title="Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        @if (pharmacy.Status == "Pending")
+                                        {
+                                            <form asp-action="ApprovePharmacy" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@pharmacy.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Pharmacies")" />
+                                                <button type="button" class="btn btn-success"
+                                                        data-mt-swal-message="Approve this pharmacy registration?"
+                                                        data-mt-swal-title="Approve pharmacy"
+                                                        data-mt-swal-icon="question"
+                                                        data-mt-swal-confirm-text="Approve"
+                                                        title="Approve">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <form asp-action="RejectPharmacy" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@pharmacy.Id" />
+                                                <input type="hidden" name="returnUrl" value="@Url.Action("Pharmacies")" />
+                                                <button type="button" class="btn btn-danger"
+                                                        data-mt-swal-message="Reject this pharmacy registration? This action cannot be undone."
+                                                        data-mt-swal-title="Reject pharmacy"
+                                                        data-mt-swal-icon="warning"
+                                                        data-mt-swal-danger="true"
+                                                        data-mt-swal-confirm-text="Reject"
+                                                        title="Reject">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (pharmacy.Status == "Active")
+                                        {
+                                            <form asp-action="SuspendPharmacy" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@pharmacy.Id" />
+                                                <button type="button" class="btn btn-outline-warning"
+                                                        data-mt-swal-message="Suspend this pharmacy? They will be unable to access the platform."
+                                                        data-mt-swal-title="Suspend pharmacy"
+                                                        data-mt-swal-icon="warning"
+                                                        data-mt-swal-confirm-text="Suspend"
+                                                        title="Suspend">
+                                                    <i class="bi bi-pause-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (pharmacy.Status == "Suspended")
+                                        {
+                                            <form asp-action="ReactivatePharmacy" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@pharmacy.Id" />
+                                                <button type="button" class="btn btn-outline-success"
+                                                        data-mt-swal-message="Reactivate this pharmacy?"
+                                                        data-mt-swal-title="Reactivate pharmacy"
+                                                        data-mt-swal-icon="question"
+                                                        data-mt-swal-confirm-text="Reactivate"
+                                                        title="Reactivate">
+                                                    <i class="bi bi-play-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        <form asp-action="DeletePharmacy" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@pharmacy.Id" />
+                                            <button type="button" class="btn btn-outline-danger"
+                                                    data-mt-swal-message="Delete this pharmacy permanently? All data will be removed."
+                                                    data-mt-swal-title="Delete pharmacy"
+                                                    data-mt-swal-icon="warning"
+                                                    data-mt-swal-danger="true"
+                                                    data-mt-swal-confirm-text="Delete"
+                                                    title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Pharmacies.Any())
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No pharmacies registered yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="rowCount">Showing @Model.Pharmacies.Count items</span>
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportTableToCSV('pharmacyTable', 'pharmacies.csv')">
+                    <i class="bi bi-download me-1"></i>Export
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchPharmacies').val().toLowerCase();
+            var status = $('#filterPharmacyStatus').val();
+            var governorate = $('#filterPharmacyGov').val();
+            var tier = $('#filterTier').val();
+            var visible = 0;
+
+            $('#pharmacyTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowStatus = $row.data('status');
+                var rowGov = $row.data('governorate');
+                var rowTier = $row.data('tier');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (status && rowStatus !== status) show = false;
+                if (governorate && rowGov !== governorate) show = false;
+                if (tier && rowTier !== tier) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetPharmacyFilters() {
+            $('#searchPharmacies').val('');
+            $('#filterPharmacyStatus, #filterPharmacyGov, #filterTier').val('');
+            $('#pharmacyTable tbody tr').show();
+            $('#rowCount').text('Showing @Model.Pharmacies.Count items');
+        }
+
+        $('#searchPharmacies').on('keyup', filterRows);
+        $('#filterPharmacyStatus, #filterPharmacyGov, #filterTier').on('change', filterRows);
+    </script>
+}

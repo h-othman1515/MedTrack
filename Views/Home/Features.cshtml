@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Features";
+}
+
+<div class="container">
+    <div class="text-center mb-5">
+        <div class="hero__eyebrow mb-3">Platform</div>
+        <h1 class="fw-bold">Platform Features</h1>
+        <p class="text-muted">Everything pharmacies, distributors, and the Ministry of Health need in one place.</p>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var f in new[] {
+            new { Icon = "bi-box-seam", Title = "Inventory Management", Desc = "Log stock with batch numbers and expiry dates. Bulk import via CSV." },
+            new { Icon = "bi-bell", Title = "Expiry Alert Engine", Desc = "Automated 60, 30 and 7-day alerts via in-app, email and SMS." },
+            new { Icon = "bi-arrow-left-right", Title = "Surplus Sharing", Desc = "Post and request surplus stock between pharmacies by governorate." },
+            new { Icon = "bi-graph-up", Title = "Shortage Detection", Desc = "Regional shortage flags when multiple pharmacies drop below minimum." },
+            new { Icon = "bi-geo-alt", Title = "Shortage Map", Desc = "Governorate-level heatmap of medication availability for the MOH." },
+            new { Icon = "bi-truck", Title = "Restock Portal", Desc = "Aggregated demand view so distributors can plan shipments." }
+        })
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0">
+                    <div class="card-body p-4">
+                        <div class="rounded-3 bg-primary bg-opacity-10 d-inline-flex p-3 mb-3">
+                            <i class="bi @f.Icon text-primary fs-3"></i>
+                        </div>
+                        <h5 class="fw-bold">@f.Title</h5>
+                        <p class="text-muted mb-0">@f.Desc</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="/Account/Register" class="btn-primary-mt">
+            <i class="bi bi-capsule-pill"></i> Get Started
+        </a>
+    </div>
+</div>

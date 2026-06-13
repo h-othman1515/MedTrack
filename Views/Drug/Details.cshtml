@@ -1,0 +1,145 @@
+﻿@model MedTrack.Models.Drug
+@{
+    ViewData["Title"] = Model.GenericName;
+    ViewData["PageIcon"] = "bi-capsule-pill";
+    ViewData["Subtitle"] = "Medication details and stock overview";
+    ViewData["BackUrl"] = Url.Action("Index");
+    var batches = Model.MedicationBatches.OrderBy(b => b.ExpiryDate).ToList();
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="card mb-4">
+        <div class="card-header bg-transparent py-3">
+            <h5 class="fw-bold mb-0"><i class="bi bi-capsule me-2"></i>@Model.GenericName</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Category</dt>
+                <dd class="col-sm-9"><span class="badge bg-info text-dark">@Model.Category</span></dd>
+                <dt class="col-sm-3">Min Stock Level</dt>
+                <dd class="col-sm-9">@Model.DefaultMinStockLevel @Model.DefaultUnit</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@batches.Count</div>
+                <div class="small text-muted">Batches</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@batches.Sum(b => b.Quantity)</div>
+                <div class="small text-muted">Total Units</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@batches.Select(b => b.PharmacyId).Distinct().Count()</div>
+                <div class="small text-muted">Pharmacies</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@batches.Count(b => b.ExpiryDate < DateTime.UtcNow)</div>
+                <div class="small text-muted">Expired Batches</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Pharmacy, batch...">
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-transparent py-3">
+            <h5 class="fw-bold mb-0">Stock Across Pharmacies</h5>
+        </div>
+        <div class="card-body p-0">
+            @if (batches.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-medtrack mb-0" id="drugStockTable">
+                        <thead>
+                            <tr>
+                                <th>Pharmacy</th>
+                                <th>Batch</th>
+                                <th>Quantity</th>
+                                <th>Expiry</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var batch in batches)
+                            {
+                                <tr data-pharmacy="@batch.Pharmacy.Name">
+                                    <td>@batch.Pharmacy.Name</td>
+                                    <td><code>@batch.BatchNo</code></td>
+                                    <td>@batch.Quantity</td>
+                                    <td>@batch.ExpiryDate.ToString("yyyy-MM-dd")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    No stock recorded for this drug.
+                </div>
+            }
+        </div>
+        @if (batches.Any())
+        {
+            <div class="card-footer bg-transparent">
+                <span class="text-muted small" id="rowCount">Showing @batches.Count items</span>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var visible = 0;
+
+            $('#drugStockTable tbody tr').each(function () {
+                var text = $(this).text().toLowerCase();
+                var show = !search || text.indexOf(search) !== -1;
+                $(this).toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#drugStockTable tbody tr').show();
+            $('#rowCount').text('Showing @batches.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+    </script>
+}

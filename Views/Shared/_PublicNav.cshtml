@@ -1,0 +1,19 @@
+@{
+    var active = ViewData["NavActive"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+}
+
+<nav class="mt-nav">
+    <a href="/" class="mt-nav__brand">
+        <span class="pill-logo"><span></span><span></span></span>
+        MedTrack Jordan
+    </a>
+    <div class="mt-nav__links">
+        <a href="/Home/Features" class="hide-mobile @(controller == "Home" && action == "Features" ? "active-nav" : "")">Features</a>
+        <a href="/Home/About" class="hide-mobile @(controller == "Home" && action == "About" ? "active-nav" : "")">About</a>
+        <a href="/Account/Login" class="@(active == "login" || (controller == "Account" && action == "Login") ? "active-nav" : "")">Login</a>
+        <partial name="_ThemeToggle" />
+        <a href="/Account/Register" class="btn-nav-cta @(active == "register" ? "active-nav" : "")">Get Started</a>
+    </div>
+</nav>

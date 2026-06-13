@@ -1,0 +1,136 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "Analytics";
+    Layout = "_Layout";
+    var categoryColors = new[] { "#e8335a", "#ff7900", "#7c5fe6", "#00b4a6", "#9ca3af", "#3b82f6", "#10b981" };
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-graph-up me-2"></i>National Analytics</h2>
+            <p class="text-muted mb-0">Trends across the national pharmaceutical network</p>
+        </div>
+        <a href="/MOH/Reports" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Export</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Registered Pharmacies</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalPharmacies</h3>
+                            <small class="text-primary">Across @(Model.ShortageHotspots.Count) governorates</small>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Active Shortages</p>
+                            <h3 class="fw-bold mb-0">@Model.ActiveShortages</h3>
+                            <small class="text-danger">Currently reported</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Resolved (Month)</p>
+                            <h3 class="fw-bold mb-0">@Model.ResolvedThisMonth</h3>
+                            <small class="text-success">Shortages resolved</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Saved via Transfers</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalSavedViaTransfers.ToString("C0")</h3>
+                            <small class="text-warning">JOD prevented from waste</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2"></i>Restock Request Trend</h5></div>
+                <div class="card-body"><div style="height:320px"><canvas id="trendChart"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-pie-chart me-2"></i>Shortages by Category</h5></div>
+                <div class="card-body"><div style="height:320px"><canvas id="categoryChart"></canvas></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.mtMohTrendLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortageTrendLabels));
+        window.mtMohTrendValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortageTrendValues));
+        window.mtMohCategoryLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortagesByCategory.Select(c => c.Category).ToList()));
+        window.mtMohCategoryValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortagesByCategory.Select(c => c.Count).ToList()));
+        window.mtMohCategoryColors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(categoryColors));
+
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: window.mtMohTrendLabels,
+                datasets: [{
+                    label: 'Restock Requests',
+                    data: window.mtMohTrendValues,
+                    borderColor: '#ff7900',
+                    backgroundColor: 'rgba(255,121,0,.1)',
+                    fill: true,
+                    tension: .35
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: window.mtMohCategoryLabels.length ? window.mtMohCategoryLabels : ['No data'],
+                datasets: [{
+                    data: window.mtMohCategoryValues.length ? window.mtMohCategoryValues : [1],
+                    backgroundColor: window.mtMohCategoryColors
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+}

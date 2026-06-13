@@ -1,0 +1,43 @@
+﻿@model MedTrack.Models.Pharmacy
+@{
+    ViewData["Title"] = "Delete Pharmacy";
+    ViewData["PageIcon"] = "bi-exclamation-triangle";
+    ViewData["Subtitle"] = "Permanently remove pharmacy";
+    ViewData["BackUrl"] = Url.Action("Index");
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                    <h4 class="fw-bold mt-3">Delete Pharmacy?</h4>
+                    <p class="text-muted">This will permanently remove <strong>@Model.Name</strong> and all associated data.</p>
+
+                    <dl class="row text-start mt-4">
+                        <dt class="col-sm-4">License</dt>
+                        <dd class="col-sm-8">@Model.LicenseNo</dd>
+                        <dt class="col-sm-4">Governorate</dt>
+                        <dd class="col-sm-8">@Model.Governorate</dd>
+                    </dl>
+
+                    <form asp-action="Delete" class="mt-4"
+                          data-mt-swal-confirm="Delete @Model.Name and all associated data?"
+                          data-mt-swal-title="Confirm deletion"
+                          data-mt-swal-icon="warning"
+                          data-mt-swal-danger="true"
+                          data-mt-swal-confirm-text="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn btn-danger fw-semibold">
+                            <i class="bi bi-trash me-1"></i>Confirm Delete
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,63 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Regional Demand";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-graph-up me-2"></i>Regional Demand</h2>
+            <p class="text-muted mb-0">Aggregated demand signals to plan shipments</p>
+        </div>
+        <a href="/Distributor/RestockRequests" class="btn btn-primary"><i class="bi bi-inbox me-1"></i>View Requests</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2"></i>Demand by Governorate</h5></div>
+                <div class="card-body"><div style="height:320px"><canvas id="demandChart"></canvas></div></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header bg-white"><h5 class="fw-bold mb-0"><i class="bi bi-list-ol me-2"></i>Top Requested Drugs</h5></div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @foreach (var d in Model.TopRequestedDrugs)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                @d.DrugName <span class="badge bg-primary rounded-pill">@d.TotalQuantity</span>
+                            </li>
+                        }
+                        @if (!Model.TopRequestedDrugs.Any())
+                        {
+                            <li class="list-group-item text-center text-muted py-4">No restock requests recorded yet.</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.mtDemandChartLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DemandChartLabels));
+        window.mtDemandChartValues = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DemandChartValues));
+
+        new Chart(document.getElementById('demandChart'), {
+            type: 'bar',
+            data: {
+                labels: window.mtDemandChartLabels.length ? window.mtDemandChartLabels : ['No data'],
+                datasets: [{
+                    label: 'Units Needed',
+                    data: window.mtDemandChartValues.length ? window.mtDemandChartValues : [0],
+                    backgroundColor: '#ff7900'
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+}

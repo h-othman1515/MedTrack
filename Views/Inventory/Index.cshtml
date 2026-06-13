@@ -1,0 +1,272 @@
+@model List<MedTrack.Models.ViewModels.InventoryItemViewModel>
+@{
+    ViewData["Title"] = "Inventory";
+    Layout = "_Layout";
+
+    var totalItems = Model.Count;
+    var expiredCount = Model.Count(x => x.Status == "Expired");
+    var lowStock = Model.Count(x => x.Status == "Danger");
+    var warningCount = Model.Count(x => x.Status == "Warning");
+    var totalValue = Model.Sum(x => x.TotalValue);
+}
+
+<div class="fade-in">
+
+    <!-- ?? Header ?? -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-box-seam me-2"></i>Inventory Management</h2>
+            <p class="text-muted mb-0">Manage medication batches, stock levels, and expiry dates</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Inventory/Import" class="btn btn-outline-primary">
+                <i class="bi bi-upload me-1"></i>Import CSV
+            </a>
+            <a href="/Inventory/Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add Item
+            </a>
+        </div>
+    </div>
+
+    <!-- ?? Stats Row ?? -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@totalItems</div>
+                <div class="small text-muted">Total Items</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@expiredCount</div>
+                <div class="small text-muted">Expired</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@(lowStock + warningCount)</div>
+                <div class="small text-muted">Low / Critical Stock</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-5 fw-bold text-success">@totalValue.ToString("N0") JOD</div>
+                <div class="small text-muted">Total Value</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?? Filter Bar ?? -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInventory" placeholder="Drug name or batch...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Category</label>
+                    <select class="form-select" id="filterCategory">
+                        <option value="">All Categories</option>
+                        <option>Antibiotics</option>
+                        <option>Cardiovascular</option>
+                        <option>Diabetes</option>
+                        <option>Pain Relief</option>
+                        <option>Vitamins</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="Healthy">Healthy</option>
+                        <option value="Warning">Warning</option>
+                        <option value="Danger">Critical</option>
+                        <option value="Expired">Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Expiry Range</label>
+                    <select class="form-select" id="filterExpiry">
+                        <option value="">All</option>
+                        <option value="7">Within 7 days</option>
+                        <option value="30">Within 30 days</option>
+                        <option value="60">Within 60 days</option>
+                        <option value="90">Within 90 days</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ?? Inventory Table ?? -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" class="form-check-input" id="selectAll"></th>
+                            <th>Drug Name</th>
+                            <th>Category</th>
+                            <th>Batch No</th>
+                            <th>Quantity</th>
+                            <th>Min Level</th>
+                            <th>Expiry Date</th>
+                            <th>Status</th>
+                            <th>Value (JOD)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr data-category="@item.Category" data-status="@item.Status" data-expiry="@item.DaysUntilExpiry">
+                                <td><input type="checkbox" class="form-check-input row-checkbox"></td>
+                                <td>
+                                    <div class="fw-bold">@item.DrugName</div>
+                                    <small class="text-muted">@item.GenericName</small>
+                                </td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@item.Category</span></td>
+                                <td><code class="small">@item.BatchNo</code></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <span class="fw-bold me-2">@item.Quantity</span>
+                                        <small class="text-muted">@item.Unit</small>
+                                    </div>
+                                    @{
+                                        var pct = item.MinStockLevel > 0
+                                        ? Math.Min(item.Quantity * 100 / (item.MinStockLevel * 2), 100)
+                                        : 100;
+                                        var barColor = item.Quantity <= item.MinStockLevel ? "bg-danger" : "bg-success";
+                                    }
+                                    <div class="progress progress-thin mt-1">
+                                        <div class="progress-bar @barColor" style="width:@pct%"></div>
+                                    </div>
+                                </td>
+                                <td>@item.MinStockLevel</td>
+                                <td>
+                                    @item.ExpiryDate.ToString("yyyy-MM-dd")
+                                    <br>
+                                    @if (item.DaysUntilExpiry <= 0)
+                                    {
+                                        <span class="badge bg-dark">EXPIRED</span>
+                                    }
+                                    else if (item.DaysUntilExpiry <= 7)
+                                    {
+                                        <span class="badge bg-danger">@item.DaysUntilExpiry days</span>
+                                    }
+                                    else if (item.DaysUntilExpiry <= 30)
+                                    {
+                                        <span class="badge bg-warning text-dark">@item.DaysUntilExpiry days</span>
+                                    }
+                                    else if (item.DaysUntilExpiry <= 60)
+                                    {
+                                        <span class="badge bg-info">@item.DaysUntilExpiry days</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">@item.DaysUntilExpiry days</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="status-badge status-@item.Status.ToLower()">@item.Status</span>
+                                </td>
+                                <td class="fw-bold">@item.TotalValue.ToString("C2")</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Inventory/Edit/@item.Id" class="btn btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        @if (item.Status == "Danger" || item.Status == "Expired")
+                                        {
+                                            <button class="btn btn-sos" data-drug="@item.DrugName" title="SOS Alert">
+                                                <i class="bi bi-broadcast"></i>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <a href="/Surplus/Create?batchId=@item.Id" class="btn btn-outline-success" title="List Surplus">
+                                                <i class="bi bi-arrow-up-circle"></i>
+                                            </a>
+                                        }
+                                        <button class="btn btn-outline-danger" data-mt-delete-name="@item.DrugName" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="rowCount">Showing @Model.Count items</span>
+                <div class="btn-group">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="exportTableToCSV('inventoryTable', 'inventory.csv')">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" id="bulkDeleteBtn">
+                        <i class="bi bi-trash me-1"></i>Bulk Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ?? Select All ??
+        document.getElementById('selectAll').addEventListener('change', function () {
+            document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+        });
+
+        // ?? Unified filter (search + dropdowns work together) ??
+        function filterRows() {
+            var search   = $('#searchInventory').val().toLowerCase();
+            var category = $('#filterCategory').val();
+            var status   = $('#filterStatus').val();
+            var expiry   = parseInt($('#filterExpiry').val()) || 9999;
+            var visible  = 0;
+
+            $('#inventoryTable tbody tr').each(function () {
+                var text       = $(this).text().toLowerCase();
+                var rowCat     = $(this).data('category');
+                var rowStatus  = $(this).data('status');
+                var rowExpiry  = parseInt($(this).data('expiry')) || 9999;
+
+                var show = true;
+                if (search   && text.indexOf(search) === -1) show = false;
+                if (category && rowCat    !== category)      show = false;
+                if (status   && rowStatus !== status)        show = false;
+                if (rowExpiry > expiry)                      show = false;
+
+                $(this).toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        $('#searchInventory').on('keyup', filterRows);
+        $('#filterCategory, #filterStatus, #filterExpiry').on('change', filterRows);
+
+        function resetFilters() {
+            $('#searchInventory').val('');
+            $('#filterCategory, #filterStatus, #filterExpiry').val('');
+            $('#inventoryTable tbody tr').show();
+            $('#rowCount').text('Showing @Model.Count items');
+        }
+    </script>
+}

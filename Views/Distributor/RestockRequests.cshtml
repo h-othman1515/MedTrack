@@ -1,0 +1,215 @@
+@model MedTrack.Models.ViewModels.RestockRequestsPageViewModel
+@{
+    ViewData["Title"] = "Restock Requests";
+    Layout = "_Layout";
+    var total = Model.Requests.Count;
+    var pending = Model.Requests.Count(r => r.Status == "Pending");
+    var confirmed = Model.Requests.Count(r => r.Status == "Confirmed");
+    var delivered = Model.Requests.Count(r => r.Status == "Delivered");
+}
+
+<div class="fade-in">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-inbox me-2"></i>Restock Requests</h2>
+            <p class="text-muted mb-0">@Model.PendingCount pending requests awaiting confirmation</p>
+        </div>
+        <a href="/Distributor" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@total</div>
+                <div class="small text-muted">Total Requests</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@pending</div>
+                <div class="small text-muted">Pending</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@confirmed</div>
+                <div class="small text-muted">Confirmed</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@delivered</div>
+                <div class="small text-muted">Delivered</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Pharmacy, drug, ID...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Governorate</label>
+                    <select class="form-select" id="filterGovernorate">
+                        <option value="">All Regions</option>
+                        @foreach (var gov in Model.Governorates)
+                        {
+                            <option value="@gov">@gov</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="restockTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pharmacy</th>
+                            <th>Drug</th>
+                            <th>Requested</th>
+                            <th>Current</th>
+                            <th>Min</th>
+                            <th>Requested On</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var r in Model.Requests)
+                        {
+                            var statusBadge = r.Status switch
+                            {
+                                "Pending" => "primary",
+                                "Confirmed" => "info",
+                                _ => "success"
+                            };
+                            <tr data-status="@r.Status" data-governorate="@r.Governorate">
+                                <td><code>#@r.Id</code></td>
+                                <td>
+                                    <div class="fw-bold">@r.PharmacyName</div>
+                                    <small class="text-muted">@r.Governorate</small>
+                                </td>
+                                <td>@r.DrugName</td>
+                                <td class="fw-bold">@r.RequestedQuantity</td>
+                                <td>@r.CurrentStock</td>
+                                <td>@r.MinStockLevel</td>
+                                <td class="small text-muted">@r.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")</td>
+                                <td><span class="badge bg-@statusBadge">@r.Status</span></td>
+                                <td>
+                                    @if (r.Status == "Pending")
+                                    {
+                                        <form asp-action="ConfirmRequest" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@r.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg me-1"></i>Confirm
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>Done</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Requests.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No restock requests yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="rowCount">Showing @total items</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var governorate = $('#filterGovernorate').val();
+            var status = $('#filterStatus').val();
+            var visible = 0;
+
+            $('#restockTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowGov = $row.data('governorate');
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (governorate && rowGov !== governorate) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#filterGovernorate, #filterStatus').val('');
+            $('#restockTable tbody tr').show();
+            $('#rowCount').text('Showing @total items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+        $('#filterGovernorate, #filterStatus').on('change', filterRows);
+    </script>
+}

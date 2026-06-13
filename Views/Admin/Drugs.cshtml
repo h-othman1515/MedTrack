@@ -1,0 +1,226 @@
+@model MedTrack.Models.ViewModels.DrugCatalogViewModel
+@{
+    ViewData["Title"] = "Drug Catalog";
+    Layout = "_Layout";
+    var drugs = Model.Drugs;
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-capsule me-2"></i>Drug Catalog</h2>
+            <p class="text-muted mb-0">Manage master drug list, categories, and default thresholds</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="exportTableToCSV('drugsTable', 'drug_catalog.csv')">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <a href="/Admin/AddDrug" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Add Drug
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@Model.TotalDrugs</div>
+                <div class="small text-muted">Total Drugs</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@Model.Categories.Count</div>
+                <div class="small text-muted">Categories</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@drugs.Count(d => d.IsCritical)</div>
+                <div class="small text-muted">Critical Drugs</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@drugs.Count(d => d.RequiresPrescription)</div>
+                <div class="small text-muted">Rx Required</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Drug name, brand...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Category</label>
+                    <select class="form-select" id="filterCategory">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="drugsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Generic Name</th>
+                            <th>Brand Names</th>
+                            <th>Category</th>
+                            <th>Default Min</th>
+                            <th>Unit</th>
+                            <th>Rx Required</th>
+                            <th>Critical</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var drug in drugs)
+                        {
+                            var statusLabel = drug.IsActive ? "Active" : "Inactive";
+                            <tr data-category="@drug.Category" data-status="@statusLabel">
+                                <td><code>#@drug.Id</code></td>
+                                <td>
+                                    <div class="fw-bold">@drug.GenericName</div>
+                                    <small class="text-muted">@drug.ScientificName</small>
+                                </td>
+                                <td>@drug.BrandNames</td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@drug.Category</span></td>
+                                <td class="fw-bold">@drug.DefaultMinStock</td>
+                                <td>@drug.DefaultUnit</td>
+                                <td>
+                                    @if (drug.RequiresPrescription)
+                                    {
+                                        <span class="badge bg-danger">Rx</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">OTC</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (drug.IsCritical)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>Critical</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (drug.IsActive)
+                                    {
+                                        <span class="status-badge status-healthy">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Admin/EditDrug/@drug.Id" class="btn btn-outline-secondary" title="Edit">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger"
+                                                data-mt-swal-message="Remove this drug from the catalog? Existing inventory will not be affected."
+                                                data-mt-swal-title="Remove drug"
+                                                data-mt-swal-icon="warning"
+                                                data-mt-swal-danger="true"
+                                                data-mt-swal-confirm-text="Remove"
+                                                data-mt-swal-success="Drug removed from catalog"
+                                                title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!drugs.Any())
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No drugs in catalog. <a href="/Admin/AddDrug">Add a drug</a>.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="rowCount">Showing @drugs.Count items</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var category = $('#filterCategory').val();
+            var status = $('#filterStatus').val();
+            var visible = 0;
+
+            $('#drugsTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowCat = $row.data('category');
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (category && rowCat !== category) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#filterCategory, #filterStatus').val('');
+            $('#drugsTable tbody tr').show();
+            $('#rowCount').text('Showing @drugs.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+        $('#filterCategory, #filterStatus').on('change', filterRows);
+    </script>
+}

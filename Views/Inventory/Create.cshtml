@@ -1,0 +1,153 @@
+@model MedTrack.Models.ViewModels.InventoryCreateViewModel
+@{
+    ViewData["Title"] = "Add Inventory Item";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-box-seam me-2"></i>Add Inventory Item</h2>
+            <p class="text-muted mb-0">Add a new medication batch to your pharmacy stock</p>
+        </div>
+        <a href="/Inventory" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to Inventory
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-plus-circle me-2"></i>Add New Medication</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post" id="inventoryForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                        <div class="row g-3">
+                            <!-- Drug Information -->
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3">Drug Information</h6>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="DrugName" class="form-label"></label>
+                                <input asp-for="DrugName" class="form-control" placeholder="e.g., Panadol Extra" />
+                                <span asp-validation-for="DrugName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="GenericName" class="form-label"></label>
+                                <input asp-for="GenericName" class="form-control" placeholder="e.g., Paracetamol + Caffeine" />
+                                <span asp-validation-for="GenericName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Category" class="form-label"></label>
+                                <select asp-for="Category" class="form-select">
+                                    <option value="">Select Category</option>
+                                    <option>Antibiotics</option>
+                                    <option>Antiviral</option>
+                                    <option>Cardiovascular</option>
+                                    <option>Diabetes</option>
+                                    <option>Gastrointestinal</option>
+                                    <option>Pain Relief</option>
+                                    <option>Respiratory</option>
+                                    <option>Vitamins & Supplements</option>
+                                    <option>Other</option>
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="BatchNo" class="form-label"></label>
+                                <input asp-for="BatchNo" class="form-control" placeholder="e.g., BN20250601A" />
+                                <span asp-validation-for="BatchNo" class="text-danger small"></span>
+                            </div>
+
+                            <!-- Stock Information -->
+                            <div class="col-12 mt-2">
+                                <h6 class="fw-bold text-primary mb-3">Stock Information</h6>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="Quantity" class="form-label"></label>
+                                <input asp-for="Quantity" class="form-control stock-input" type="number" min="1" data-min="0" />
+                                <span asp-validation-for="Quantity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="Unit" class="form-label"></label>
+                                <select asp-for="Unit" class="form-select">
+                                    <option value="">Select Unit</option>
+                                    <option>Tablets</option>
+                                    <option>Capsules</option>
+                                    <option>Bottles</option>
+                                    <option>Boxes</option>
+                                    <option>Vials</option>
+                                    <option>Ampoules</option>
+                                    <option>Tubes</option>
+                                    <option>Packs</option>
+                                </select>
+                                <span asp-validation-for="Unit" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="MinStockLevel" class="form-label"></label>
+                                <input asp-for="MinStockLevel" class="form-control" type="number" min="0" />
+                                <span asp-validation-for="MinStockLevel" class="text-danger small"></span>
+                                <div class="stock-indicator mt-1 small"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="UnitPrice" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">JOD</span>
+                                    <input asp-for="UnitPrice" class="form-control" type="number" step="0.01" min="0" placeholder="0.00" />
+                                </div>
+                                <span asp-validation-for="UnitPrice" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="ExpiryDate" class="form-label"></label>
+                                <input asp-for="ExpiryDate" class="form-control" type="date" />
+                                <span asp-validation-for="ExpiryDate" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <a href="/Inventory" class="btn btn-outline-secondary">Cancel</a>
+                            <div class="d-flex gap-2">
+                                <button type="submit" name="action" value="saveAndAdd" class="btn btn-outline-primary">
+                                    <i class="bi bi-plus-lg me-1"></i>Save & Add Another
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>Save Item
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="card mt-3 bg-light">
+                <div class="card-body">
+                    <h6 class="fw-bold"><i class="bi bi-lightbulb me-2 text-warning"></i>Quick Tips</h6>
+                    <ul class="small text-muted mb-0">
+                        <li>Set minimum stock levels based on your average monthly consumption</li>
+                        <li>Use batch numbers exactly as printed on the packaging</li>
+                        <li>The system will automatically alert you 60, 30, and 7 days before expiry</li>
+                        <li>Items below minimum threshold will trigger auto-restock requests to your distributor</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

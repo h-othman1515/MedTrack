@@ -1,0 +1,319 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Distributor Portal";
+    Layout = "_Layout";
+    var demand = Model.RegionalDemand ?? new List<MedTrack.Models.ViewModels.RegionalDemandViewModel>();
+    var recent = Model.RecentRequests ?? new List<MedTrack.Models.ViewModels.RestockRequestViewModel>();
+    var govCount = demand.Select(r => r.Governorate).Distinct().Count();
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-grid me-2"></i>Distributor Portal</h2>
+            <p class="text-muted mb-0">Aggregated demand view and restock request management</p>
+        </div>
+        <a href="/Distributor/RestockRequests" class="btn btn-primary">
+            <i class="bi bi-inbox me-1"></i>View Requests
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@Model.PendingRestockRequests</div>
+                <div class="small text-muted">Pending Requests</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@Model.ConfirmedDeliveries</div>
+                <div class="small text-muted">Delivered This Month</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@govCount</div>
+                <div class="small text-muted">Governorates Served</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@demand.Sum(d => d.TotalQuantityNeeded)</div>
+                <div class="small text-muted">Units Needed</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-transparent">
+            <h5 class="fw-bold mb-0"><i class="bi bi-graph-up me-2"></i>Regional Demand Overview</h5>
+        </div>
+        <div class="card-body border-bottom">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchDemand" placeholder="Governorate, drug...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Governorate</label>
+                    <select class="form-select" id="filterDemandGov">
+                        <option value="">All Governorates</option>
+                        @foreach (var gov in demand.Select(d => d.Governorate).Distinct().OrderBy(g => g))
+                        {
+                            <option value="@gov">@gov</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Urgency</label>
+                    <select class="form-select" id="filterDemandUrgency">
+                        <option value="">All Urgency</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetDemandFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="demandTable">
+                    <thead>
+                        <tr>
+                            <th>Governorate</th>
+                            <th>Drug</th>
+                            <th>Pharmacies Below Min</th>
+                            <th>Total Needed</th>
+                            <th>Current Stock</th>
+                            <th>Urgency</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in demand)
+                        {
+                            var urgencyBadge = item.Urgency switch
+                            {
+                                "High" => "danger",
+                                "Medium" => "warning text-dark",
+                                _ => "info"
+                            };
+                            <tr data-governorate="@item.Governorate" data-urgency="@item.Urgency">
+                                <td class="fw-bold">@item.Governorate</td>
+                                <td>@item.DrugName</td>
+                                <td><span class="badge bg-danger">@item.PharmaciesBelowMin</span></td>
+                                <td class="fw-bold">@item.TotalQuantityNeeded</td>
+                                <td>@item.CurrentRegionalStock</td>
+                                <td><span class="badge bg-@urgencyBadge">@item.Urgency</span></td>
+                                <td>
+                                    <a href="/Distributor/RestockRequests?governorate=@item.Governorate" class="btn btn-sm btn-outline-primary" title="View requests">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!demand.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No regional demand data available.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="demandRowCount">Showing @demand.Count items</span>
+                <button class="btn btn-outline-secondary btn-sm" onclick="exportTableToCSV('demandTable', 'regional_demand.csv')">
+                    <i class="bi bi-download me-1"></i>Export CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-inbox me-2"></i>Recent Restock Requests</h5>
+            <a href="/Distributor/RestockRequests" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body border-bottom">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchRecent" placeholder="Pharmacy, drug...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterRecentStatus">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetRecentFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="recentTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pharmacy</th>
+                            <th>Drug</th>
+                            <th>Requested</th>
+                            <th>Current</th>
+                            <th>Min</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var req in recent)
+                        {
+                            var statusBadge = req.Status switch
+                            {
+                                "Pending" => "primary",
+                                "Confirmed" => "info",
+                                _ => "success"
+                            };
+                            <tr data-status="@req.Status">
+                                <td><code>#@req.Id</code></td>
+                                <td>
+                                    <div class="fw-bold">@req.PharmacyName</div>
+                                    <small class="text-muted">@req.Governorate</small>
+                                </td>
+                                <td>@req.DrugName</td>
+                                <td class="fw-bold">@req.RequestedQuantity</td>
+                                <td>@req.CurrentStock</td>
+                                <td>@req.MinStockLevel</td>
+                                <td><span class="badge bg-@statusBadge">@req.Status</span></td>
+                                <td>
+                                    @if (req.Status == "Pending")
+                                    {
+                                        <form asp-controller="Distributor" asp-action="ConfirmRequest" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@req.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg me-1"></i>Confirm
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>Done</button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!recent.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No restock requests yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="recentRowCount">Showing @recent.Count items</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterDemandRows() {
+            var search = $('#searchDemand').val().toLowerCase();
+            var governorate = $('#filterDemandGov').val();
+            var urgency = $('#filterDemandUrgency').val();
+            var visible = 0;
+
+            $('#demandTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowGov = $row.data('governorate');
+                var rowUrgency = $row.data('urgency');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (governorate && rowGov !== governorate) show = false;
+                if (urgency && rowUrgency !== urgency) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#demandRowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetDemandFilters() {
+            $('#searchDemand').val('');
+            $('#filterDemandGov, #filterDemandUrgency').val('');
+            $('#demandTable tbody tr').show();
+            $('#demandRowCount').text('Showing @demand.Count items');
+        }
+
+        function filterRecentRows() {
+            var search = $('#searchRecent').val().toLowerCase();
+            var status = $('#filterRecentStatus').val();
+            var visible = 0;
+
+            $('#recentTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#recentRowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetRecentFilters() {
+            $('#searchRecent').val('');
+            $('#filterRecentStatus').val('');
+            $('#recentTable tbody tr').show();
+            $('#recentRowCount').text('Showing @recent.Count items');
+        }
+
+        $('#searchDemand').on('keyup', filterDemandRows);
+        $('#filterDemandGov, #filterDemandUrgency').on('change', filterDemandRows);
+        $('#searchRecent').on('keyup', filterRecentRows);
+        $('#filterRecentStatus').on('change', filterRecentRows);
+    </script>
+}

@@ -1,0 +1,4 @@
+DrugName,GenericName,Category,BatchNo,Quantity,Unit,MinStockLevel,UnitPrice,ExpiryDate
+Panadol Extra,Paracetamol + Caffeine,Pain Relief,BN20250601A,200,Tablets,50,1.25,2026-12-31
+Amoxil 500mg,Amoxicillin,Antibiotics,BN20250602B,150,Capsules,30,2.50,2027-03-15
+Glucophage 850,Metformin,Diabetes,BN20250603C,100,Tablets,40,1.80,2027-01-20

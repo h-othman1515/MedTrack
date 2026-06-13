@@ -1,0 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace MedTrack.Models.ViewModels
+{
+    public class AuditLogViewModel
+        {
+            public List<AuditLogEntryViewModel> Logs { get; set; } = new();
+        }
+}

@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Create User";
+    ViewData["PageIcon"] = "bi-person-plus";
+    ViewData["Subtitle"] = "Add a new platform user";
+    ViewData["BackUrl"] = "/Admin/Users";
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="post" asp-action="CreateUser">
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Full Name</label>
+                                <input name="FullName" class="form-control" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input name="Email" type="email" class="form-control" required />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Role</label>
+                                <select name="Role" class="form-select">
+                                    <option>Pharmacy Staff</option>
+                                    <option>Pharmacy Manager</option>
+                                    <option>Distributor</option>
+                                    <option>MOH Admin</option>
+                                    <option>System Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Temporary Password</label>
+                                <input name="Password" type="password" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Create User</button>
+                            <a href="/Admin/Users" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

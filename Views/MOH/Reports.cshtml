@@ -1,0 +1,108 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "Reports";
+    Layout = "_Layout";
+    var governorates = ViewBag.Governorates as IReadOnlyList<string> ?? Array.Empty<string>();
+    var defaultFrom = ViewBag.DefaultFrom as string ?? DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd");
+    var defaultTo = ViewBag.DefaultTo as string ?? DateTime.Now.ToString("yyyy-MM-dd");
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-file-earmark-bar-graph me-2"></i>Export Reports</h2>
+            <p class="text-muted mb-0">Generate national supply-chain reports for stakeholders</p>
+        </div>
+        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer me-1"></i>Print</button>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header bg-white py-3"><h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2"></i>Report Builder</h5></div>
+                <div class="card-body">
+                    <form asp-action="GenerateReport" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="reportType">Report Type</label>
+                            <select class="form-select" name="reportType" id="reportType" required>
+                                <option value="shortage-summary">National Shortage Summary</option>
+                                <option value="expiry-waste">Expiry Waste by Region</option>
+                                <option value="transfer-activity">Transfer Activity</option>
+                                <option value="pharmacy-compliance">Pharmacy Compliance</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-semibold" for="reportFrom">From</label>
+                                <input type="date" class="form-control" name="from" id="reportFrom" value="@defaultFrom" required />
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label fw-semibold" for="reportTo">To</label>
+                                <input type="date" class="form-control" name="to" id="reportTo" value="@defaultTo" required />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="reportGov">Governorate</label>
+                            <select class="form-select" name="governorate" id="reportGov">
+                                <option value="">All Governorates</option>
+                                @foreach (var gov in governorates)
+                                {
+                                    <option value="@gov">@gov</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-file-earmark-arrow-down me-1"></i>Generate Report
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3"><h5 class="fw-bold mb-0"><i class="bi bi-graph-up me-2"></i>Snapshot</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="card stat-card primary">
+                                <div class="card-body py-3">
+                                    <p class="text-muted mb-1 small text-uppercase">Registered Pharmacies</p>
+                                    <h4 class="fw-bold mb-0">@Model.TotalPharmacies</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card stat-card danger">
+                                <div class="card-body py-3">
+                                    <p class="text-muted mb-1 small text-uppercase">Active Shortages</p>
+                                    <h4 class="fw-bold mb-0">@Model.ActiveShortages</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card stat-card warning">
+                                <div class="card-body py-3">
+                                    <p class="text-muted mb-1 small text-uppercase">Waste This Month</p>
+                                    <h4 class="fw-bold mb-0">@Model.TotalWasteThisMonth.ToString("C0")</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card stat-card success">
+                                <div class="card-body py-3">
+                                    <p class="text-muted mb-1 small text-uppercase">Saved via Transfers</p>
+                                    <h4 class="fw-bold mb-0">@Model.TotalSavedViaTransfers.ToString("C0")</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted small mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Generated reports download as CSV files with real data from the national registry.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

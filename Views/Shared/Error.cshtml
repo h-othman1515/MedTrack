@@ -1,0 +1,17 @@
+﻿@using MedTrack.Models
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="mt-simple-page">
+    <div class="card border-0">
+        <div class="mt-auth-icon mx-auto"><i class="bi bi-exclamation-octagon"></i></div>
+        <h2 class="fw-bold mt-3 text-danger">An error occurred</h2>
+        @if (Model.ShowRequestId)
+        {
+            <p class="small text-muted">Request ID: <code>@Model.RequestId</code></p>
+        }
+        <a href="/" class="btn-primary-mt mt-3"><i class="bi bi-house"></i> Go Home</a>
+    </div>
+</div>

@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "About";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="hero__eyebrow mb-3">About Us</div>
+            <h1 class="fw-bold mb-3">About MedTrack Jordan</h1>
+            <p class="lead text-muted">
+                A web-based platform that addresses a critical gap in Jordan's pharmaceutical supply chain:
+                the absence of real-time inventory visibility between pharmacies, distributors, and the Ministry of Health.
+            </p>
+
+            <hr class="my-4" style="border-color:var(--mt-border)" />
+
+            <h4 class="fw-bold mt-4">The Problem</h4>
+            <p class="text-muted">
+                Jordan imports over 90% of its medications, making supply chain fragility a genuine public health risk.
+                Pharmacies operate in silos — over-ordering costly drugs that expire unused, while neighboring
+                pharmacies face shortages of the same medications.
+            </p>
+
+            <h4 class="fw-bold mt-4">Our Solution</h4>
+            <div class="row g-3 mt-1">
+                @foreach (var item in new[] {
+                    ("bi-box-seam", "Smart Inventory", "Colour-coded expiry tracking with automated 60/30/7-day alerts."),
+                    ("bi-arrow-left-right", "Surplus Marketplace", "Peer-to-peer surplus sharing between pharmacies before stock expires."),
+                    ("bi-graph-up-arrow", "National Analytics", "A live shortage dashboard for Ministry of Health decision-makers."),
+                    ("bi-truck", "Distributor Portal", "Aggregated regional demand signals for smarter shipment planning.")
+                })
+                {
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0">
+                            <div class="card-body">
+                                <i class="bi @item.Item1 text-primary fs-3"></i>
+                                <h6 class="fw-bold mt-2">@item.Item2</h6>
+                                <p class="small text-muted mb-0">@item.Item3</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <p class="text-muted mt-4 mb-0">
+                Built with ASP.NET Core 8 · Orange Internship 2025
+            </p>
+        </div>
+    </div>
+</div>

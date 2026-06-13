@@ -1,0 +1,176 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "Pharmacies";
+    Layout = "_Layout";
+    var pharmacies = Model.RegisteredPharmacies;
+    var activeCount = pharmacies.Count(p => p.Status == "Active");
+    var pendingCount = pharmacies.Count(p => p.Status == "Pending");
+    var withShortages = pharmacies.Count(p => p.ActiveShortages > 0);
+    var govCount = pharmacies.Select(p => p.Governorate).Distinct().Count();
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-shop me-2"></i>Registered Pharmacies</h2>
+            <p class="text-muted mb-0">@Model.TotalPharmacies pharmacies across @govCount governorates</p>
+        </div>
+        <a href="/Pharmacy" class="btn btn-outline-primary"><i class="bi bi-list me-1"></i>Full Directory</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@pharmacies.Count</div>
+                <div class="small text-muted">Total Pharmacies</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@activeCount</div>
+                <div class="small text-muted">Active</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@pendingCount</div>
+                <div class="small text-muted">Pending Approval</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@withShortages</div>
+                <div class="small text-muted">With Shortages</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Pharmacy name...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Governorate</label>
+                    <select class="form-select" id="filterGovernorate">
+                        <option value="">All Governorates</option>
+                        @foreach (var gov in pharmacies.Select(p => p.Governorate).Distinct().OrderBy(g => g))
+                        {
+                            <option value="@gov">@gov</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="pharmaciesTable">
+                    <thead>
+                        <tr>
+                            <th>Pharmacy</th>
+                            <th>Governorate</th>
+                            <th>Batches</th>
+                            <th>Active Shortages</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in pharmacies)
+                        {
+                            var shortBadge = p.ActiveShortages > 3 ? "danger" : p.ActiveShortages > 0 ? "warning text-dark" : "success";
+                            var statusBadge = p.Status switch
+                            {
+                                "Active" => "success",
+                                "Pending" => "secondary",
+                                _ => "danger"
+                            };
+                            <tr data-governorate="@p.Governorate" data-status="@p.Status">
+                                <td class="fw-semibold">@p.Name</td>
+                                <td>@p.Governorate</td>
+                                <td>@p.BatchCount</td>
+                                <td><span class="badge bg-@shortBadge">@p.ActiveShortages</span></td>
+                                <td><span class="badge bg-@statusBadge">@p.Status</span></td>
+                            </tr>
+                        }
+                        @if (!pharmacies.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No pharmacies registered yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="rowCount">Showing @pharmacies.Count items</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var governorate = $('#filterGovernorate').val();
+            var status = $('#filterStatus').val();
+            var visible = 0;
+
+            $('#pharmaciesTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowGov = $row.data('governorate');
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (governorate && rowGov !== governorate) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#filterGovernorate, #filterStatus').val('');
+            $('#pharmaciesTable tbody tr').show();
+            $('#rowCount').text('Showing @pharmacies.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+        $('#filterGovernorate, #filterStatus').on('change', filterRows);
+    </script>
+}

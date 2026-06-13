@@ -1,0 +1,174 @@
+﻿@model MedTrack.Models.Pharmacy
+@{
+    ViewData["Title"] = Model.Name;
+    ViewData["PageIcon"] = "bi-building";
+    ViewData["Subtitle"] = "Pharmacy profile and inventory";
+    ViewData["BackUrl"] = Url.Action("Index");
+    var batches = Model.MedicationBatches.OrderBy(b => b.ExpiryDate).ToList();
+    var lowStock = batches.Count(b => b.Quantity <= b.MinStockLevel);
+    var expired = batches.Count(b => b.ExpiryDate < DateTime.UtcNow);
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-transparent py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-building me-2"></i>@Model.Name</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">License No</dt>
+                        <dd class="col-sm-9"><span class="badge bg-secondary">@Model.LicenseNo</span></dd>
+                        <dt class="col-sm-3">Governorate</dt>
+                        <dd class="col-sm-9">@Model.Governorate</dd>
+                        <dt class="col-sm-3">Address</dt>
+                        <dd class="col-sm-9">@Model.Address</dd>
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9">@Model.ContactEmail</dd>
+                        <dt class="col-sm-3">Phone</dt>
+                        <dd class="col-sm-9">@Model.Phone</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center py-3">
+                        <div class="fs-2 fw-bold text-primary">@batches.Count</div>
+                        <div class="small text-muted">Batches</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center py-3">
+                        <div class="fs-2 fw-bold text-warning">@lowStock</div>
+                        <div class="small text-muted">Low Stock</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center py-3">
+                        <div class="fs-2 fw-bold text-danger">@expired</div>
+                        <div class="small text-muted">Expired</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Search</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Drug, batch...">
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-transparent py-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-box-seam me-2"></i>Inventory</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (batches.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-medtrack mb-0" id="pharmacyInventoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Drug</th>
+                                        <th>Batch</th>
+                                        <th>Qty</th>
+                                        <th>Expiry</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var batch in batches)
+                                    {
+                                        var days = (batch.ExpiryDate - DateTime.UtcNow).Days;
+                                        var badgeClass = days < 0 ? "bg-danger" : days <= 30 ? "bg-warning text-dark" : "bg-success";
+                                        <tr>
+                                            <td>@batch.Drug.GenericName</td>
+                                            <td><code>@batch.BatchNo</code></td>
+                                            <td>@batch.Quantity</td>
+                                            <td><span class="badge @badgeClass">@batch.ExpiryDate.ToString("yyyy-MM-dd")</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No inventory recorded.
+                        </div>
+                    }
+                </div>
+                @if (batches.Any())
+                {
+                    <div class="card-footer bg-transparent">
+                        <span class="text-muted small" id="rowCount">Showing @batches.Count items</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="fw-bold">Staff Members</h6>
+                    <ul class="list-group list-group-flush">
+                        @foreach (var user in Model.Staff)
+                        {
+                            <li class="list-group-item px-0">
+                                <i class="bi bi-person-circle me-2 text-primary"></i>@user.FullName
+                                <div class="small text-muted">@user.Email</div>
+                            </li>
+                        }
+                        @if (!Model.Staff.Any())
+                        {
+                            <li class="list-group-item px-0 text-muted">No users assigned.</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var visible = 0;
+
+            $('#pharmacyInventoryTable tbody tr').each(function () {
+                var text = $(this).text().toLowerCase();
+                var show = !search || text.indexOf(search) !== -1;
+                $(this).toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#pharmacyInventoryTable tbody tr').show();
+            $('#rowCount').text('Showing @batches.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+    </script>
+}

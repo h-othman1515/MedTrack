@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Register Pharmacy";
+    ViewData["PageIcon"] = "bi-shop";
+    ViewData["Subtitle"] = "Onboard a new pharmacy to the platform";
+    ViewData["BackUrl"] = "/Admin/Pharmacies";
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body p-4">
+                    <form method="post" asp-action="RegisterPharmacy">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Pharmacy Name</label>
+                            <input name="Name" class="form-control" required />
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">License No</label>
+                                <input name="LicenseNo" class="form-control" required />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Governorate</label>
+                                <select name="Governorate" class="form-select">
+                                    <option>Amman</option>
+                                    <option>Irbid</option>
+                                    <option>Zarqa</option>
+                                    <option>Balqa</option>
+                                    <option>Madaba</option>
+                                    <option>Mafraq</option>
+                                    <option>Karak</option>
+                                    <option>Aqaba</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Contact Email</label>
+                                <input name="ContactEmail" type="email" class="form-control" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Phone</label>
+                                <input name="Phone" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Register</button>
+                            <a href="/Admin/Pharmacies" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

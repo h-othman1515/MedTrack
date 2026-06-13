@@ -1,0 +1,285 @@
+@model MedTrack.Models.ViewModels.MOHDashboardViewModel
+@{
+    ViewData["Title"] = "National Dashboard";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-grid me-2"></i>National Analytics Dashboard</h2>
+            <p class="text-muted mb-0">Ministry of Health - Real-time pharmaceutical supply chain overview</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/MOH/Reports" class="btn btn-outline-primary">
+                <i class="bi bi-download me-1"></i>Export Report
+            </a>
+            <a href="/MOH/Shortages" class="btn btn-primary">
+                <i class="bi bi-map me-1"></i>Shortage Map
+            </a>
+        </div>
+    </div>
+
+    <!-- National Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Registered Pharmacies</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalPharmacies</h3>
+                            <small class="text-primary">Across 12 governorates</small>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-shop"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Active Shortages</p>
+                            <h3 class="fw-bold mb-0">@Model.ActiveShortages</h3>
+                            <small class="text-danger"><i class="bi bi-arrow-up"></i> @Model.ResolvedThisMonth resolved this month</small>
+                        </div>
+                        <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Waste This Month</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalWasteThisMonth.ToString("C0")</h3>
+                            <small class="text-warning">JOD in expired medications</small>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                            <i class="bi bi-trash"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card stat-card success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1 small text-uppercase">Saved via Transfers</p>
+                            <h3 class="fw-bold mb-0">@Model.TotalSavedViaTransfers.ToString("C0")</h3>
+                            <small class="text-success">JOD prevented from waste</small>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart me-2"></i>Shortages by Governorate</h5>
+                    <select class="form-select form-select-sm" style="width: 150px;">
+                        <option>Current Month</option>
+                        <option>Last 3 Months</option>
+                        <option>Year to Date</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div style="height: 350px;">
+                        <canvas id="shortageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-trophy me-2"></i>Top 20 Shortages</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var shortage in Model.TopShortages)
+                        {
+                            <div class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">@shortage.DrugName</h6>
+                                        <small class="text-muted">@shortage.GenericName | @shortage.Category</small>
+                                    </div>
+                                    <span class="badge bg-danger">@shortage.PharmaciesShort pharmacies</span>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2 small">
+                                    <span class="text-muted">@shortage.GovernoratesAffected governorates affected</span>
+                                    <span class="text-danger">@shortage.DaysSinceFirstReported days since first report</span>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.TopShortages.Any())
+                        {
+                            <div class="list-group-item p-3 text-center text-muted">No active shortages recorded.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waste & Transfer Trends -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-graph-down me-2"></i>Expiry Waste by Region</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-medtrack mb-0" id="wasteByRegionTable">
+                            <thead>
+                                <tr>
+                                    <th>Governorate</th>
+                                    <th>Waste (JOD)</th>
+                                    <th>Items</th>
+                                    <th>Trend</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var waste in Model.ExpiryWasteByRegion)
+                                {
+                                    <tr data-governorate="@waste.Governorate">
+                                        <td class="fw-bold">@waste.Governorate</td>
+                                        <td>@waste.WasteValue.ToString("C0")</td>
+                                        <td>@waste.ItemsWasted</td>
+                                        <td>
+                                            @if (waste.TrendVsLastMonth > 0)
+                                            {
+                                                <span class="text-danger"><i class="bi bi-arrow-up"></i> @waste.TrendVsLastMonth%</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-success"><i class="bi bi-arrow-down"></i> @Math.Abs(waste.TrendVsLastMonth)%</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                @if (!Model.ExpiryWasteByRegion.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            No expiry waste recorded this month.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <span class="text-muted small">Showing @Model.ExpiryWasteByRegion.Count items</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2"></i>Transfer Activity</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-medtrack mb-0" id="transferActivityTable">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Transfers</th>
+                                    <th>Value (JOD)</th>
+                                    <th>Items Saved</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var activity in Model.TransferActivity)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@activity.Month</td>
+                                        <td>@activity.TransfersCompleted</td>
+                                        <td>@activity.ValueTransferred.ToString("C0")</td>
+                                        <td>@activity.ItemsSaved</td>
+                                    </tr>
+                                }
+                                @if (!Model.TransferActivity.Any())
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">
+                                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                            No completed transfers yet.
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <span class="text-muted small">Showing @Model.TransferActivity.Count items</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Governorate Hotspots -->
+    <div class="card">
+        <div class="card-header bg-transparent">
+            <h5 class="fw-bold mb-0"><i class="bi bi-geo-alt me-2"></i>Shortage Hotspots</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @foreach (var hotspot in Model.ShortageHotspots)
+                {
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card border-@(hotspot.Severity == "Critical" ? "danger" : hotspot.Severity == "High" ? "warning" : "info")">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h6 class="fw-bold mb-1">@hotspot.Governorate</h6>
+                                    <span class="badge bg-@(hotspot.Severity == "Critical" ? "danger" : hotspot.Severity == "High" ? "warning text-dark" : "info")">
+                                        @hotspot.Severity
+                                    </span>
+                                </div>
+                                <p class="mb-1"><span class="fw-bold">@hotspot.ActiveShortages</span> active shortages</p>
+                                <p class="text-muted small mb-0">@hotspot.PharmaciesAffected pharmacies affected</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (!Model.ShortageHotspots.Any())
+                {
+                    <div class="col-12 text-center py-4 text-muted">No shortage hotspots detected.</div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.mtShortageChartData = {
+            labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortageChartLabels)),
+            active: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortageChartActive)),
+            resolved: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ShortageChartResolved))
+        };
+    </script>
+}

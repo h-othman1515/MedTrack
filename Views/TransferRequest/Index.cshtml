@@ -1,0 +1,191 @@
+﻿@model IEnumerable<MedTrack.Models.TransferRequest>
+@{
+    ViewData["Title"] = "Transfer Requests";
+    var list = Model.ToList();
+    var pending = list.Count(t => t.Status == MedTrack.Models.TransferStatus.Pending);
+    var confirmed = list.Count(t => t.Status == MedTrack.Models.TransferStatus.Confirmed);
+    var completed = list.Count(t => t.Status == MedTrack.Models.TransferStatus.Completed);
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-send me-2"></i>Transfer Requests</h2>
+            <p class="text-muted mb-0">Track and manage medication transfer requests</p>
+        </div>
+        <a asp-controller="SurplusPost" asp-action="Index" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left-right me-1"></i>Browse Surplus
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@list.Count</div>
+                <div class="small text-muted">Total Requests</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@pending</div>
+                <div class="small text-muted">Pending</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@confirmed</div>
+                <div class="small text-muted">Confirmed</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@completed</div>
+                <div class="small text-muted">Completed</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Drug, pharmacy...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="transferRequestTable">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>From</th>
+                            <th>Requesting</th>
+                            <th>Status</th>
+                            <th>Requested</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in list)
+                        {
+                            var statusName = item.Status.ToString();
+                            var badge = item.Status switch
+                            {
+                                MedTrack.Models.TransferStatus.Pending => "bg-warning text-dark",
+                                MedTrack.Models.TransferStatus.Confirmed => "bg-info",
+                                MedTrack.Models.TransferStatus.Completed => "bg-success",
+                                MedTrack.Models.TransferStatus.Cancelled => "bg-secondary",
+                                _ => "bg-light"
+                            };
+                            <tr data-status="@statusName">
+                                <td class="fw-semibold">@item.SurplusPost.Drug.GenericName</td>
+                                <td>@item.SurplusPost.Pharmacy.Name</td>
+                                <td>@item.RequestingPharmacy.Name</td>
+                                <td><span class="badge @badge">@statusName</span></td>
+                                <td class="small text-muted">@item.RequestedAt.ToString("yyyy-MM-dd")</td>
+                                <td class="text-end">
+                                    @if (item.Status == MedTrack.Models.TransferStatus.Pending)
+                                    {
+                                        <form asp-action="Confirm" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-info" title="Confirm">
+                                                <i class="bi bi-check-lg"></i> Confirm
+                                            </button>
+                                        </form>
+                                        <form asp-action="Cancel" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Cancel">
+                                                <i class="bi bi-x-lg"></i> Cancel
+                                            </button>
+                                        </form>
+                                    }
+                                    @if (item.Status == MedTrack.Models.TransferStatus.Confirmed)
+                                    {
+                                        <form asp-action="Complete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Complete">
+                                                <i class="bi bi-check-all"></i> Complete
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!list.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No transfer requests yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="rowCount">Showing @list.Count items</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var status = $('#filterStatus').val();
+            var visible = 0;
+
+            $('#transferRequestTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#filterStatus').val('');
+            $('#transferRequestTable tbody tr').show();
+            $('#rowCount').text('Showing @list.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+        $('#filterStatus').on('change', filterRows);
+    </script>
+}

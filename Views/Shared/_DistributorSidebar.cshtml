@@ -1,0 +1,48 @@
+<nav id="sidebar" class="bg-white shadow-sm">
+    <div class="sidebar-header p-3 border-bottom">
+        <a href="/Distributor" class="d-flex align-items-center text-decoration-none">
+            <div class="brand-icon bg-primary text-white rounded-3 p-2 me-2">
+                <i class="bi bi-capsule-pill fs-4"></i>
+            </div>
+            <div>
+                <h5 class="mb-0 fw-bold text-primary">MedTrack</h5>
+                <small class="text-muted">Distributor</small>
+            </div>
+        </a>
+    </div>
+
+    <ul class="list-unstyled components p-3">
+        <li class="mb-1">
+            <a href="/Distributor" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Distributor" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="bi bi-speedometer2 me-2"></i>Demand Overview
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/Distributor/RestockRequests" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "RestockRequests" ? "active" : "")">
+                <i class="bi bi-inbox me-2"></i>Restock Requests
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/Distributor/Deliveries" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Deliveries" ? "active" : "")">
+                <i class="bi bi-truck me-2"></i>Deliveries
+            </a>
+        </li>
+        <li class="mb-1">
+            <a href="/Distributor/Analytics" class="nav-link rounded-2 @(ViewContext.RouteData.Values["Action"]?.ToString() == "Analytics" ? "active" : "")">
+                <i class="bi bi-graph-up me-2"></i>Regional Demand
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer p-3 border-top mt-auto">
+        <div class="d-flex align-items-center">
+            <div class="bg-info bg-opacity-10 text-info rounded-circle p-2 me-2">
+                <i class="bi bi-building"></i>
+            </div>
+            <div>
+                <small class="d-block fw-bold">Distributor Portal</small>
+                <small class="text-muted">Aggregated View</small>
+            </div>
+        </div>
+    </div>
+</nav>

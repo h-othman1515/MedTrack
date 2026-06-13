@@ -1,0 +1,279 @@
+@model MedTrack.Models.ViewModels.MOHGovernorateDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.Governorate} — Shortage Details";
+    Layout = "_Layout";
+    var hotspot = ViewBag.Hotspot as MedTrack.Models.ViewModels.ShortageHotspotViewModel;
+    var activeShortages = hotspot?.ActiveShortages ?? Model.Shortages.Sum(s => s.PharmaciesShort);
+    var pharmaciesAffected = hotspot?.PharmaciesAffected ?? Model.Shortages.Count;
+    var severity = hotspot?.Severity ?? "Low";
+    var shortages = Model.Shortages;
+    var transfers = Model.RecentTransfers;
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="/MOH/Shortages" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left me-1"></i>Back to Shortage Map
+            </a>
+            <h2 class="fw-bold mb-1 mt-2">@Model.Governorate Governorate</h2>
+            <p class="text-muted mb-0">Regional shortage breakdown and affected pharmacies</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/MOH/Reports" class="btn btn-outline-primary"><i class="bi bi-download me-1"></i>Export Report</a>
+            <a href="/MOH/Dashboard" class="btn btn-primary"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@activeShortages</div>
+                <div class="small text-muted">Active Shortages</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@pharmaciesAffected</div>
+                <div class="small text-muted">Pharmacies Affected</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-5 fw-bold text-primary">@severity</div>
+                <div class="small text-muted">Severity Level</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@transfers.Count</div>
+                <div class="small text-muted">Recent Transfers</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-transparent">
+            <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Short Medications in @Model.Governorate</h5>
+        </div>
+        <div class="card-body border-bottom">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchShortages" placeholder="Drug, category...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Category</label>
+                    <select class="form-select" id="filterShortageCategory">
+                        <option value="">All Categories</option>
+                        @foreach (var cat in shortages.Select(s => s.Category).Distinct().OrderBy(c => c))
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetShortageFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="shortagesTable">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>Category</th>
+                            <th>Pharmacies Below Min</th>
+                            <th>Est. Units Needed</th>
+                            <th>Urgency</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var drug in shortages)
+                        {
+                            var urgency = drug.PharmaciesShort >= 5 ? "Critical" : drug.PharmaciesShort >= 3 ? "High" : "Medium";
+                            var urgencyBadge = urgency switch
+                            {
+                                "Critical" => "danger",
+                                "High" => "warning text-dark",
+                                _ => "info"
+                            };
+                            <tr data-category="@drug.Category" data-urgency="@urgency">
+                                <td class="fw-bold">@drug.DrugName</td>
+                                <td>@drug.Category</td>
+                                <td>@drug.PharmaciesShort</td>
+                                <td>@(drug.PharmaciesShort * 50)</td>
+                                <td><span class="badge bg-@urgencyBadge">@urgency</span></td>
+                            </tr>
+                        }
+                        @if (!shortages.Any())
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No active shortages in this governorate.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="shortageRowCount">Showing @shortages.Count items</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-transparent">
+            <h5 class="fw-bold mb-0"><i class="bi bi-arrow-left-right me-2"></i>Recent Transfer Activity</h5>
+        </div>
+        <div class="card-body border-bottom">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchTransfers" placeholder="Drug, pharmacy...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterTransferStatus">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Confirmed">Confirmed</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetTransferFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="transfersTable">
+                    <thead>
+                        <tr>
+                            <th>Drug</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Quantity</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transfer in transfers)
+                        {
+                            var statusBadge = transfer.Status switch
+                            {
+                                "Completed" => "success",
+                                "Pending" => "primary",
+                                _ => "info"
+                            };
+                            <tr data-status="@transfer.Status">
+                                <td class="fw-bold">@transfer.DrugName</td>
+                                <td>@transfer.FromPharmacy</td>
+                                <td>@transfer.ToPharmacy</td>
+                                <td>@transfer.Quantity</td>
+                                <td>@transfer.RequestedAt.ToString("MMM dd, yyyy")</td>
+                                <td><span class="badge bg-@statusBadge">@transfer.Status</span></td>
+                            </tr>
+                        }
+                        @if (!transfers.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No recent transfers in this governorate.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="transferRowCount">Showing @transfers.Count items</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterShortageRows() {
+            var search = $('#searchShortages').val().toLowerCase();
+            var category = $('#filterShortageCategory').val();
+            var visible = 0;
+
+            $('#shortagesTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowCat = $row.data('category');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (category && rowCat !== category) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#shortageRowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetShortageFilters() {
+            $('#searchShortages').val('');
+            $('#filterShortageCategory').val('');
+            $('#shortagesTable tbody tr').show();
+            $('#shortageRowCount').text('Showing @shortages.Count items');
+        }
+
+        function filterTransferRows() {
+            var search = $('#searchTransfers').val().toLowerCase();
+            var status = $('#filterTransferStatus').val();
+            var visible = 0;
+
+            $('#transfersTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#transferRowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetTransferFilters() {
+            $('#searchTransfers').val('');
+            $('#filterTransferStatus').val('');
+            $('#transfersTable tbody tr').show();
+            $('#transferRowCount').text('Showing @transfers.Count items');
+        }
+
+        $('#searchShortages').on('keyup', filterShortageRows);
+        $('#filterShortageCategory').on('change', filterShortageRows);
+        $('#searchTransfers').on('keyup', filterTransferRows);
+        $('#filterTransferStatus').on('change', filterTransferRows);
+    </script>
+}

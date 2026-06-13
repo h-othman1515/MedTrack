@@ -1,0 +1,24 @@
+@{
+    var title = ViewData["Title"]?.ToString() ?? "Page";
+    var subtitle = ViewData["Subtitle"]?.ToString();
+    var icon = ViewData["PageIcon"]?.ToString() ?? "bi-grid";
+    var backUrl = ViewData["BackUrl"]?.ToString();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div class="d-flex align-items-start gap-2">
+        @if (!string.IsNullOrEmpty(backUrl))
+        {
+            <a href="@backUrl" class="btn btn-sm btn-outline-secondary align-self-center mt-1" aria-label="Back">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        }
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi @icon me-2"></i>@title</h2>
+            @if (!string.IsNullOrEmpty(subtitle))
+            {
+                <p class="text-muted mb-0">@subtitle</p>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,190 @@
+@model MedTrack.Models.ViewModels.DistributorDashboardViewModel
+@{
+    ViewData["Title"] = "Deliveries";
+    Layout = "_Layout";
+    var deliveries = Model.ActiveDeliveries;
+    var inTransit = deliveries.Count(d => d.Status == "Confirmed");
+    var deliveredCount = deliveries.Count(d => d.Status == "Delivered");
+    var totalQty = deliveries.Sum(d => d.RequestedQuantity);
+}
+
+<div class="fade-in">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-truck me-2"></i>Deliveries</h2>
+            <p class="text-muted mb-0">@inTransit in transit · @Model.ConfirmedDeliveries delivered this month</p>
+        </div>
+        <a href="/Distributor" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Dashboard</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@deliveries.Count</div>
+                <div class="small text-muted">Total Shipments</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@inTransit</div>
+                <div class="small text-muted">In Transit</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@deliveredCount</div>
+                <div class="small text-muted">Delivered</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@totalQty</div>
+                <div class="small text-muted">Units Shipped</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Shipment, pharmacy, drug...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select class="form-select" id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="Delivered">Delivered</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="deliveriesTable">
+                    <thead>
+                        <tr>
+                            <th>Shipment</th>
+                            <th>Pharmacy</th>
+                            <th>Drug</th>
+                            <th>Qty</th>
+                            <th>Dispatched</th>
+                            <th>ETA</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in deliveries)
+                        {
+                            var dispatched = d.ConfirmedAt?.ToLocalTime();
+                            var eta = dispatched?.AddDays(3);
+                            var displayStatus = d.Status == "Confirmed" ? "In Transit" : "Delivered";
+                            var statusBadge = displayStatus == "Delivered" ? "success" : "info";
+                            <tr data-status="@displayStatus">
+                                <td><code>SHP-@d.Id</code></td>
+                                <td class="fw-semibold">@d.PharmacyName</td>
+                                <td>@d.DrugName</td>
+                                <td>@d.RequestedQuantity</td>
+                                <td class="small text-muted">@(dispatched?.ToString("yyyy-MM-dd") ?? "—")</td>
+                                <td class="small text-muted">@(eta?.ToString("yyyy-MM-dd") ?? "—")</td>
+                                <td><span class="badge bg-@statusBadge">@displayStatus</span></td>
+                                <td>
+                                    @if (d.Status == "Confirmed")
+                                    {
+                                        <form asp-action="MarkDelivered" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@d.Id" />
+                                            <button type="submit" class="btn btn-sm btn-success" title="Mark delivered">
+                                                <i class="bi bi-check-lg me-1"></i>Mark Delivered
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!deliveries.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No active deliveries. Confirm restock requests to schedule shipments.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted small" id="rowCount">Showing @deliveries.Count items</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchInput').val().toLowerCase();
+            var status = $('#filterStatus').val();
+            var visible = 0;
+
+            $('#deliveriesTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowStatus = $row.data('status');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (status && rowStatus !== status) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetFilters() {
+            $('#searchInput').val('');
+            $('#filterStatus').val('');
+            $('#deliveriesTable tbody tr').show();
+            $('#rowCount').text('Showing @deliveries.Count items');
+        }
+
+        $('#searchInput').on('keyup', filterRows);
+        $('#filterStatus').on('change', filterRows);
+    </script>
+}

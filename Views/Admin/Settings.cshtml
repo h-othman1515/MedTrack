@@ -1,0 +1,297 @@
+﻿@model MedTrack.Models.ViewModels.SystemSettingsViewModel
+@{
+    ViewData["Title"] = "System Settings";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+
+    <!-- ── Header ── -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-gear me-2"></i>System Settings</h2>
+            <p class="text-muted mb-0">Configure platform behavior, thresholds, and integrations</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <form asp-action="SaveSettings" method="post">
+                @Html.AntiForgeryToken()
+
+                <!-- ── Alert Configuration ── -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-bell me-2 text-warning"></i>Alert Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Expiry Warning Days</label>
+                                <div class="input-group">
+                                    <span class="input-group-text text-warning"><i class="bi bi-exclamation-circle"></i></span>
+                                    <input name="ExpiryAlert60" type="number" class="form-control" value="60" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <div class="form-text">First warning threshold</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Critical Expiry Days</label>
+                                <div class="input-group">
+                                    <span class="input-group-text text-orange"><i class="bi bi-exclamation-triangle"></i></span>
+                                    <input name="ExpiryAlert30" type="number" class="form-control" value="30" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <div class="form-text">Critical warning threshold</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Final Expiry Days</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-danger text-white"><i class="bi bi-x-circle"></i></span>
+                                    <input name="ExpiryAlert7" type="number" class="form-control" value="7" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <div class="form-text">Final urgent warning</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Shortage Detection Threshold</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-shop"></i></span>
+                                    <input name="ShortageThreshold" type="number" class="form-control" value="3" />
+                                    <span class="input-group-text">pharmacies</span>
+                                </div>
+                                <div class="form-text">Min pharmacies in a governorate to trigger shortage alert</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Notification Channels ── -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-envelope me-2 text-primary"></i>Notification Channels</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <p class="small text-muted mb-2 fw-semibold text-uppercase">Active Channels</p>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="smsEnabled" name="SmsEnabled" checked />
+                                    <label class="form-check-label" for="smsEnabled">
+                                        <i class="bi bi-phone me-1 text-success"></i>SMS Alerts (Orange Network)
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="emailEnabled" name="EmailEnabled" checked />
+                                    <label class="form-check-label" for="emailEnabled">
+                                        <i class="bi bi-envelope me-1 text-primary"></i>Email Alerts (SendGrid)
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="inAppEnabled" name="InAppEnabled" checked />
+                                    <label class="form-check-label" for="inAppEnabled">
+                                        <i class="bi bi-bell me-1 text-warning"></i>In-App Notifications
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">SMS Sender ID</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-broadcast"></i></span>
+                                    <input type="text" class="form-control" name="SmsSenderId" value="MedTrack" />
+                                </div>
+                                <div class="form-text">Displayed as sender name for SMS alerts</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Platform Behavior ── -->
+                <div class="card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2 text-info"></i>Platform Behavior</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Auto-Restock Threshold</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-arrow-repeat"></i></span>
+                                    <input type="number" class="form-control" name="AutoRestockThreshold" value="1.0" step="0.1" />
+                                    <span class="input-group-text">x min stock</span>
+                                </div>
+                                <div class="form-text">Trigger restock when stock falls below this multiplier of minimum</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Max Surplus Listing Days</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar-x"></i></span>
+                                    <input type="number" class="form-control" name="MaxSurplusDays" value="30" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <div class="form-text">Auto-expire surplus listings after this period</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Session Timeout</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                                    <input type="number" class="form-control" name="SessionTimeout" value="30" />
+                                    <span class="input-group-text">minutes</span>
+                                </div>
+                                <div class="form-text">Auto-logout after this period of inactivity</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Password Expiry</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                    <input type="number" class="form-control" name="PasswordExpiryDays" value="90" />
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <div class="form-text">Force password reset after this many days</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Maintenance Mode ── -->
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h5 class="fw-bold mb-0 text-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>Maintenance Mode
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="maintenanceMode" name="MaintenanceMode" />
+                            <label class="form-check-label fw-bold text-danger" for="maintenanceMode">
+                                Enable Maintenance Mode
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Maintenance Message</label>
+                            <textarea class="form-control" name="MaintenanceMessage" rows="2">MedTrack is currently under maintenance. Please check back later.</textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Start Time</label>
+                                <input type="datetime-local" class="form-control" name="MaintenanceStart" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">End Time</label>
+                                <input type="datetime-local" class="form-control" name="MaintenanceEnd" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── Actions ── -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-danger"
+                            data-mt-swal-message="Reset all settings to default values?"
+                            data-mt-swal-title="Reset settings"
+                            data-mt-swal-icon="warning"
+                            data-mt-swal-confirm-text="Reset"
+                            data-mt-swal-success="Settings reset to defaults">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Defaults
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-save me-1"></i>Save Settings
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ── Sidebar ── -->
+        <div class="col-lg-4">
+
+            <!-- System Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-info-circle me-2 text-info"></i>System Info</h5>
+                </div>
+                <div class="card-body p-0">
+                    @{
+                        var sysInfo = new (string Label, string Value, string Icon, string Badge)[]
+                        {
+                                        ("Version",       "1.0.0",                               "bi-tag",          ""),
+                                        ("Framework",     "ASP.NET Core 8",                      "bi-braces",       ""),
+                                        ("Database",      "SQL Server 2022",                     "bi-database",     ""),
+                                        ("Last Deployed", DateTime.Now.ToString("MMM dd, yyyy"), "bi-calendar",     ""),
+                                        ("Environment",   "Production",                          "bi-globe",        "success"),
+                        };
+                    }
+                    @foreach (var (label, value, icon, badge) in sysInfo)
+                    {
+                        <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2 text-muted small">
+                                <i class="bi @icon"></i>
+                                @label
+                            </div>
+                            @if (!string.IsNullOrEmpty(badge))
+                            {
+                                <span class="badge bg-@badge">@value</span>
+                            }
+                            else
+                            {
+                                <span class="fw-semibold small">@value</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Security Status -->
+            <div class="card mb-4">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-shield-check me-2 text-success"></i>Security Status</h5>
+                </div>
+                <div class="card-body p-0">
+                    @{
+                        var secItems = new (string Label, string Icon, string Status, string Color)[]
+                        {
+                                        ("HTTPS",           "bi-lock",         "Enabled",  "success"),
+                                        ("2FA",             "bi-phone",        "Optional", "warning"),
+                                        ("Password Policy", "bi-key",          "Strong",   "success"),
+                                        ("Audit Logging",   "bi-journal-text", "Active",   "success"),
+                        };
+                    }
+                    @foreach (var (label, icon, status, color) in secItems)
+                    {
+                        <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+                            <div class="d-flex align-items-center gap-2 text-muted small">
+                                <i class="bi @icon"></i>
+                                @label
+                            </div>
+                            <span class="badge bg-@color @(color == "warning" ? "text-dark" : "")">@status</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-lightning me-2 text-warning"></i>Quick Links</h5>
+                </div>
+                <div class="card-body p-0">
+                    <a href="/Admin/AuditLogs" class="d-flex align-items-center gap-2 px-3 py-2 border-bottom text-decoration-none text-body hover-bg">
+                        <i class="bi bi-journal-text text-muted"></i>
+                        <span class="small">View Audit Logs</span>
+                        <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                    </a>
+                    <a href="/Admin/Users" class="d-flex align-items-center gap-2 px-3 py-2 border-bottom text-decoration-none text-body hover-bg">
+                        <i class="bi bi-people text-muted"></i>
+                        <span class="small">Manage Users</span>
+                        <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                    </a>
+                    <a href="/Admin/Notifications" class="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none text-body hover-bg">
+                        <i class="bi bi-broadcast text-muted"></i>
+                        <span class="small">Broadcast Notification</span>
+                        <i class="bi bi-chevron-right ms-auto text-muted small"></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

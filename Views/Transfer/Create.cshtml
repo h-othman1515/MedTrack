@@ -1,0 +1,72 @@
+@model MedTrack.Models.ViewModels.TransferCreateViewModel
+@{
+    ViewData["Title"] = "Request Transfer";
+    Layout = "_Layout";
+}
+
+<div class="fade-in">
+    <div class="mb-4">
+        <a href="/Surplus" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left me-1"></i>Back to Marketplace
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="fw-bold mb-0"><i class="bi bi-truck me-2 text-primary"></i>Request Transfer</h4>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Surplus Item Summary -->
+                    <div class="alert alert-light border mb-4">
+                        <div class="d-flex">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3 me-3">
+                                <i class="bi bi-capsule fs-2"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Amoxicillin 500mg</h6>
+                                <p class="text-muted small mb-1">Amoxicillin | Antibiotics</p>
+                                <p class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>Al-Shifa Pharmacy, Amman</p>
+                                <p class="text-muted small mb-0"><i class="bi bi-calendar me-1"></i>Expires: Nov 15, 2026 (45 days left)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="Create" method="post">
+                        <input type="hidden" asp-for="SurplusPostId" value="1" />
+
+                        <div class="mb-3">
+                            <label asp-for="Quantity" class="form-label"></label>
+                            <input asp-for="Quantity" class="form-control" type="number" min="1" max="150" value="50" />
+                            <span asp-validation-for="Quantity" class="text-danger small"></span>
+                            <div class="form-text">Available: 150 units. Request up to the available quantity.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Notes" class="form-label"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any special instructions for the transfer..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Next Steps:</strong> After submitting, the source pharmacy will be notified. Once approved, coordinate pickup/delivery offline and confirm completion in the system.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/Surplus" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

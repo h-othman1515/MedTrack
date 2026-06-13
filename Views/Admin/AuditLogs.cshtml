@@ -1,0 +1,219 @@
+@model MedTrack.Models.ViewModels.AuditLogViewModel
+@{
+    ViewData["Title"] = "Audit Logs";
+    Layout = "_Layout";
+    var logs = Model.Logs;
+    var highSeverity = logs.Count(l => l.Severity == "High");
+    var deleteActions = logs.Count(l => l.Action == "Delete");
+}
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-journal-text me-2"></i>Audit Logs</h2>
+            <p class="text-muted mb-0">System activity tracking and security audit trail</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="exportTableToCSV('auditTable', 'audit_logs.csv')">
+                <i class="bi bi-download me-1"></i>Export
+            </button>
+            <button type="button" class="btn btn-outline-danger"
+                    data-mt-swal-message="Delete audit logs older than 90 days? This action cannot be undone."
+                    data-mt-swal-title="Clear old logs"
+                    data-mt-swal-icon="warning"
+                    data-mt-swal-danger="true"
+                    data-mt-swal-confirm-text="Delete logs"
+                    data-mt-swal-success="Old audit logs cleared">
+                <i class="bi bi-trash me-1"></i>Clear Old
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-primary">@logs.Count</div>
+                <div class="small text-muted">Total Entries</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-danger">@highSeverity</div>
+                <div class="small text-muted">High Severity</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-warning">@deleteActions</div>
+                <div class="small text-muted">Delete Actions</div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card text-center py-3">
+                <div class="fs-2 fw-bold text-success">@logs.Count(l => l.Action == "Create")</div>
+                <div class="small text-muted">Create Actions</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Search</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" id="searchAudit" placeholder="Search logs...">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Action</label>
+                    <select class="form-select" id="filterActionType">
+                        <option value="">All Actions</option>
+                        <option>Create</option>
+                        <option>Update</option>
+                        <option>Delete</option>
+                        <option>Login</option>
+                        <option>Transfer</option>
+                        <option>Alert</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">Entity</label>
+                    <select class="form-select" id="filterEntityType">
+                        <option value="">All Entities</option>
+                        <option>User</option>
+                        <option>Pharmacy</option>
+                        <option>Inventory</option>
+                        <option>Transfer</option>
+                        <option>Drug</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">From</label>
+                    <input type="date" class="form-control" id="filterDateFrom">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted">To</label>
+                    <input type="date" class="form-control" id="filterDateTo">
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" onclick="resetAuditFilters()" title="Reset Filters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-medtrack mb-0" id="auditTable">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Entity</th>
+                            <th>Details</th>
+                            <th>IP Address</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in logs)
+                        {
+                            var actionBadge = log.Action switch
+                            {
+                                "Delete" => "danger",
+                                "Create" => "success",
+                                "Login" => "primary",
+                                _ => "info"
+                            };
+                            <tr data-action="@log.Action" data-entity="@log.EntityType" data-date="@log.Timestamp.ToString("yyyy-MM-dd")" data-severity="@log.Severity">
+                                <td class="small">@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>
+                                    <div class="fw-bold small">@log.UserName</div>
+                                    <small class="text-muted">@log.UserRole</small>
+                                </td>
+                                <td><span class="badge bg-@actionBadge">@log.Action</span></td>
+                                <td><span class="badge bg-secondary bg-opacity-10 text-secondary">@log.EntityType</span></td>
+                                <td class="small">@log.Details</td>
+                                <td><code class="small">@log.IpAddress</code></td>
+                                <td>
+                                    @{
+                                        var sevBadge = log.Severity switch
+                                        {
+                                            "High" => "danger",
+                                            "Medium" => "warning text-dark",
+                                            _ => "success"
+                                        };
+                                    }
+                                    <span class="badge bg-@sevBadge">@log.Severity</span>
+                                </td>
+                            </tr>
+                        }
+                        @if (!logs.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No audit log entries yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-transparent">
+            <span class="text-muted small" id="rowCount">Showing @logs.Count items</span>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function filterRows() {
+            var search = $('#searchAudit').val().toLowerCase();
+            var action = $('#filterActionType').val();
+            var entity = $('#filterEntityType').val();
+            var dateFrom = $('#filterDateFrom').val();
+            var dateTo = $('#filterDateTo').val();
+            var visible = 0;
+
+            $('#auditTable tbody tr').each(function () {
+                var $row = $(this);
+                if ($row.find('td[colspan]').length) return;
+
+                var text = $row.text().toLowerCase();
+                var rowAction = $row.data('action');
+                var rowEntity = $row.data('entity');
+                var rowDate = $row.data('date');
+
+                var show = true;
+                if (search && text.indexOf(search) === -1) show = false;
+                if (action && rowAction !== action) show = false;
+                if (entity && rowEntity !== entity) show = false;
+                if (dateFrom && rowDate < dateFrom) show = false;
+                if (dateTo && rowDate > dateTo) show = false;
+
+                $row.toggle(show);
+                if (show) visible++;
+            });
+
+            $('#rowCount').text('Showing ' + visible + ' items');
+        }
+
+        function resetAuditFilters() {
+            $('#searchAudit').val('');
+            $('#filterActionType, #filterEntityType, #filterDateFrom, #filterDateTo').val('');
+            $('#auditTable tbody tr').show();
+            $('#rowCount').text('Showing @logs.Count items');
+        }
+
+        $('#searchAudit').on('keyup', filterRows);
+        $('#filterActionType, #filterEntityType, #filterDateFrom, #filterDateTo').on('change', filterRows);
+    </script>
+}

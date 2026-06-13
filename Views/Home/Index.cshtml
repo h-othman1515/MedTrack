@@ -1,0 +1,312 @@
+﻿@model MedTrack.Models.ViewModels.HomePageViewModel
+@{
+    ViewData["Title"] = "Home";
+    ViewData["HomeTheme"] = true;
+    Layout = "_Layout";
+}
+
+<!-- Floating pill field background -->
+<div class="pill-field" aria-hidden="true">
+    <svg viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <!-- scattered pills in the background -->
+        <g fill="var(--mt-teal)" opacity="1">
+            <ellipse cx="120" cy="80" rx="40" ry="18" rx="40" ry="18" transform="rotate(20,120,80)" />
+            <ellipse cx="320" cy="200" rx="35" ry="16" transform="rotate(-15,320,200)" />
+            <ellipse cx="700" cy="50" rx="50" ry="22" transform="rotate(5,700,50)" />
+            <ellipse cx="1100" cy="140" rx="42" ry="19" transform="rotate(-25,1100,140)" />
+            <ellipse cx="1300" cy="300" rx="36" ry="16" transform="rotate(40,1300,300)" />
+            <ellipse cx="200" cy="600" rx="44" ry="20" transform="rotate(-10,200,600)" />
+            <ellipse cx="950" cy="700" rx="38" ry="17" transform="rotate(30,950,700)" />
+            <ellipse cx="1250" cy="650" rx="46" ry="21" transform="rotate(-20,1250,650)" />
+            <ellipse cx="500" cy="750" rx="33" ry="15" transform="rotate(15,500,750)" />
+            <ellipse cx="80" cy="400" rx="40" ry="18" transform="rotate(-35,80,400)" />
+            <ellipse cx="800" cy="400" rx="52" ry="23" transform="rotate(10,800,400)" />
+            <ellipse cx="1350" cy="500" rx="34" ry="15" transform="rotate(-45,1350,500)" />
+        </g>
+        <!-- capsule halves (two-tone) -->
+        <g>
+            <rect x="60" y="330" width="44" height="20" rx="10" fill="var(--mt-amber)" opacity=".8" transform="rotate(20,82,340)" />
+            <rect x="104" y="330" width="44" height="20" rx="10" fill="var(--mt-text-muted)" opacity=".4" transform="rotate(20,126,340)" />
+            <rect x="570" y="490" width="40" height="18" rx="9" fill="var(--mt-red)" opacity=".8" transform="rotate(-30,590,499)" />
+            <rect x="610" y="490" width="40" height="18" rx="9" fill="var(--mt-text-muted)" opacity=".4" transform="rotate(-30,630,499)" />
+            <rect x="1100" y="580" width="44" height="20" rx="10" fill="var(--mt-green)" opacity=".7" transform="rotate(15,1122,590)" />
+            <rect x="1144" y="580" width="44" height="20" rx="10" fill="var(--mt-text-muted)" opacity=".4" transform="rotate(15,1166,590)" />
+        </g>
+        <!-- small round tablets -->
+        <circle cx="430" cy="130" r="12" fill="var(--mt-amber)" opacity=".8" />
+        <circle cx="870" cy="300" r="10" fill="var(--mt-red)" opacity=".7" />
+        <circle cx="260" cy="480" r="14" fill="var(--mt-green)" opacity=".7" />
+        <circle cx="1060" cy="430" r="11" fill="var(--mt-teal)" opacity=".8" />
+        <circle cx="660" cy="650" r="12" fill="var(--mt-amber)" opacity=".7" />
+    </svg>
+</div>
+
+<!-- ── NAVBAR ── -->
+<nav class="mt-nav">
+    <a href="/" class="mt-nav__brand">
+        <span class="pill-logo"><span></span><span></span></span>
+        MedTrack Jordan
+    </a>
+    <div class="mt-nav__links">
+        <a href="#features" class="hide-mobile">Features</a>
+        <a href="#how" class="hide-mobile">How It Works</a>
+        <a href="/Account/Login">Login</a>
+        <partial name="_ThemeToggle" />
+        <a href="/Account/Register" class="btn-nav-cta">Get Started</a>
+    </div>
+</nav>
+
+<main>
+
+    <!-- ── HERO ── -->
+    <section class="hero">
+        <div class="hero__inner">
+            <div>
+                <div class="hero__eyebrow">Jordan's Pharmaceutical Platform</div>
+                <h1 class="hero__h1">Track Every <em>Dose,</em> Prevent Every Shortage</h1>
+                <p class="hero__sub">
+                    Connect pharmacies, distributors, and the Ministry of Health through one real-time platform. Automated expiry alerts, surplus sharing, and national analytics — all in one capsule.
+                </p>
+                <div class="hero__actions">
+                    <a href="/Account/Register" class="btn-primary-mt">
+                        <i class="bi bi-capsule-pill"></i> Register Your Pharmacy
+                    </a>
+                    <a href="#features" class="btn-ghost-mt">
+                        <i class="bi bi-play-circle"></i> See How It Works
+                    </a>
+                </div>
+                <div class="hero__stats">
+                    <div class="hero__stat">
+                        <div class="hero__stat-num">3,500+</div>
+                        <div class="hero__stat-lbl">Pharmacies in Jordan</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-num">12</div>
+                        <div class="hero__stat-lbl">Governorates</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-num">90%</div>
+                        <div class="hero__stat-lbl">Import Dependency</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3-D Pill Visual -->
+            <div class="pill-visual">
+                <div class="pill-orbit pill-orbit--1">
+                    <div class="orbit-dot orbit-dot--green"></div>
+                </div>
+                <div class="pill-orbit pill-orbit--2">
+                    <div class="orbit-dot orbit-dot--amber"></div>
+                </div>
+                <div class="pill-3d">
+                    <div class="pill-3d__half pill-3d__half--left">
+                        <span class="pill-3d__text">MED</span>
+                    </div>
+                    <div class="pill-3d__divider"></div>
+                    <div class="pill-3d__half pill-3d__half--right">
+                        <span class="pill-3d__text">TRACK</span>
+                    </div>
+                    <div class="pill-3d__shine"></div>
+                </div>
+
+                <!-- floating stock card -->
+                <div class="pill-stock-card" aria-hidden="true">
+                    <div class="pill-stock-card__row">
+                        <span class="pill-stock-card__dot" style="background:var(--mt-green)"></span>
+                        <span class="pill-stock-card__name">Metformin 500mg</span>
+                        <span class="pill-stock-card__badge" style="background:var(--mt-green-glow);color:var(--mt-green)">1,240</span>
+                    </div>
+                    <div class="pill-stock-card__row">
+                        <span class="pill-stock-card__dot" style="background:var(--mt-amber)"></span>
+                        <span class="pill-stock-card__name">Amoxicillin 250mg</span>
+                        <span class="pill-stock-card__badge" style="background:var(--mt-amber-glow);color:var(--mt-amber)">45 days</span>
+                    </div>
+                    <div class="pill-stock-card__row">
+                        <span class="pill-stock-card__dot" style="background:var(--mt-red)"></span>
+                        <span class="pill-stock-card__name">Insulin Glargine</span>
+                        <span class="pill-stock-card__badge" style="background:var(--mt-red-glow);color:var(--mt-red)">SOS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── STATS BAR ── -->
+    <div class="stats-bar reveal">
+        <div class="stats-bar__inner">
+            <div class="stats-bar__item">
+                <div class="stats-bar__num">@Model.RegisteredPharmacies</div>
+                <div class="stats-bar__lbl">Pharmacies Registered</div>
+            </div>
+            <div class="stats-bar__item">
+                <div class="stats-bar__num">@Model.MedicationsTracked.ToString("N0")</div>
+                <div class="stats-bar__lbl">Medications Tracked</div>
+            </div>
+            <div class="stats-bar__item">
+                <div class="stats-bar__num">@Model.WastePrevented.ToString("C0")</div>
+                <div class="stats-bar__lbl">Waste Prevented (JOD)</div>
+            </div>
+            <div class="stats-bar__item">
+                <div class="stats-bar__num">@Model.ShortagesResolved</div>
+                <div class="stats-bar__lbl">Shortages Resolved</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── FEATURES ── -->
+    <section id="features" class="section">
+        <div class="section__inner">
+            <div class="section__header reveal">
+                <span class="section__label">Core Modules</span>
+                <h2 class="section__h2">Everything Your Pharmacy Needs</h2>
+                <p class="section__sub">Six interconnected modules built for Jordan's pharmaceutical supply chain.</p>
+            </div>
+            <div class="features-grid">
+
+                <div class="feat-card reveal" style="--fc-accent:var(--mt-teal)">
+                    <div class="feat-card__icon"><i class="bi bi-box-seam"></i></div>
+                    <h3 class="feat-card__h3">Smart Inventory</h3>
+                    <p class="feat-card__p">Live color-coded stock view — green, amber, red — with automated threshold monitoring and CSV bulk import.</p>
+                    <div class="feat-card__pill"><span></span><span></span></div>
+                </div>
+
+                <div class="feat-card reveal" style="--fc-accent:var(--mt-amber)">
+                    <div class="feat-card__icon"><i class="bi bi-bell-fill"></i></div>
+                    <h3 class="feat-card__h3">Expiry Alert Engine</h3>
+                    <p class="feat-card__p">Automated 60-day, 30-day, and 7-day warnings via SMS (Orange network), email, and in-app push.</p>
+                    <div class="feat-card__pill"><span></span><span></span></div>
+                </div>
+
+                <div class="feat-card reveal" style="--fc-accent:var(--mt-green)">
+                    <div class="feat-card__icon"><i class="bi bi-arrow-left-right"></i></div>
+                    <h3 class="feat-card__h3">Surplus Marketplace</h3>
+                    <p class="feat-card__p">Peer-to-peer surplus sharing between pharmacies before stock expires — browse by proximity and drug type.</p>
+                    <div class="feat-card__pill"><span></span><span></span></div>
+                </div>
+
+                <div class="feat-card reveal" style="--fc-accent:var(--mt-red)">
+                    <div class="feat-card__icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    <h3 class="feat-card__h3">SOS Shortage Alert</h3>
+                    <p class="feat-card__p">One-tap critical alert to MOH and neighboring pharmacies the moment stock falls below minimum threshold.</p>
+                    <div class="feat-card__pill"><span></span><span></span></div>
+                </div>
+
+                <div class="feat-card reveal" style="--fc-accent:#7c5fe6">
+                    <div class="feat-card__icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <h3 class="feat-card__h3">National Analytics</h3>
+                    <p class="feat-card__p">MOH dashboard with shortage hotspot maps, top-20 shortage drugs, expiry waste by region, and trend lines.</p>
+                    <div class="feat-card__pill"><span></span><span></span></div>
+                </div>
+
+                <div class="feat-card reveal" style="--fc-accent:#f56a23">
+                    <div class="feat-card__icon"><i class="bi bi-truck"></i></div>
+                    <h3 class="feat-card__h3">Distributor Portal</h3>
+                    <p class="feat-card__p">Auto-generated restock requests with aggregated demand by drug and governorate — ship smarter, not blind.</p>
+                    <div class="feat-card__pill"><span></span><span></span></div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── HOW IT WORKS ── -->
+    <section id="how" class="section hiw">
+        <div class="section__inner">
+            <div class="section__header reveal">
+                <span class="section__label">Workflow</span>
+                <h2 class="section__h2">Three Steps to Full Control</h2>
+                <p class="section__sub">From registration to real-time intelligence in minutes.</p>
+            </div>
+            <div class="hiw-steps">
+                <div class="hiw-step reveal">
+                    <div class="hiw-step__num">01</div>
+                    <h3 class="hiw-step__h3">Upload Inventory</h3>
+                    <p class="hiw-step__p">Log stock manually or bulk-import via CSV. Set minimum thresholds and expiry tracking per medication.</p>
+                </div>
+                <div class="hiw-step reveal">
+                    <div class="hiw-step__num">02</div>
+                    <h3 class="hiw-step__h3">Receive Alerts</h3>
+                    <p class="hiw-step__p">Get automated expiry and shortage alerts via SMS, email, and in-app notifications — wherever you are.</p>
+                </div>
+                <div class="hiw-step reveal">
+                    <div class="hiw-step__num">03</div>
+                    <h3 class="hiw-step__h3">Take Action</h3>
+                    <p class="hiw-step__p">Share surplus stock, request transfers from nearby pharmacies, or auto-generate distributor restock orders.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── STAKEHOLDERS ── -->
+    <section class="section">
+        <div class="section__inner">
+            <div class="section__header reveal">
+                <span class="section__label">Who It's For</span>
+                <h2 class="section__h2">Built for Every Stakeholder</h2>
+            </div>
+            <div class="stake-grid">
+                <div class="stake-card reveal">
+                    <div class="stake-card__icon">🏪</div>
+                    <h3 class="stake-card__h3">Community Pharmacists</h3>
+                    <p class="stake-card__p">Manage daily inventory across Jordan's 12 governorates with smart color-coded alerts and zero expiry waste.</p>
+                </div>
+                <div class="stake-card reveal">
+                    <div class="stake-card__icon">🏥</div>
+                    <h3 class="stake-card__h3">Hospital Pharmacies</h3>
+                    <p class="stake-card__p">Find surplus stock from nearby pharmacies in seconds during critical emergencies — no phone calls needed.</p>
+                </div>
+                <div class="stake-card reveal">
+                    <div class="stake-card__icon">🚚</div>
+                    <h3 class="stake-card__h3">Drug Distributors</h3>
+                    <p class="stake-card__p">Receive structured, real-time demand signals — move away from WhatsApp-based chaos to data-driven logistics.</p>
+                </div>
+                <div class="stake-card reveal">
+                    <div class="stake-card__icon">🏛️</div>
+                    <h3 class="stake-card__h3">Ministry of Health</h3>
+                    <p class="stake-card__p">Live national shortage dashboard with policy-grade data. Know about a crisis before patients do.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section class="cta-section reveal">
+        <div class="cta-section__inner">
+            <h2>Ready to Transform Jordan's Pharmaceutical Supply Chain?</h2>
+            <p>Join the pilot program. Free for the first 20 pharmacies in Amman. No credit card required.</p>
+            <a href="/Account/Register" class="btn-cta-main">
+                <i class="bi bi-capsule-pill"></i> Register Your Pharmacy
+            </a>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="mt-footer">
+        <div class="mt-footer__inner">
+            <div class="mt-footer__brand">
+                <span class="pill-logo" style="width:24px;height:12px;border-radius:999px;overflow:hidden;display:flex;">
+                    <span style="flex:1;background:var(--mt-teal)"></span>
+                    <span style="flex:1;background:var(--mt-amber)"></span>
+                </span>
+                MedTrack Jordan
+            </div>
+            <div>Orange Internship 2025 &nbsp;·&nbsp; Built with ASP.NET Core 8</div>
+        </div>
+    </footer>
+
+</main>
+
+@section Scripts {
+    <script>
+        (function(){
+          // Scroll reveal (theme toggle handled globally in _Layout.cshtml)
+          if('IntersectionObserver' in window){
+            var obs = new IntersectionObserver(function(entries){
+              entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); } });
+            }, { threshold: 0.12 });
+            document.querySelectorAll('.reveal').forEach(function(el){ obs.observe(el); });
+          }
+        })();
+    </script>
+}

@@ -1,0 +1,11 @@
+@if (TempData["Success"] != null || TempData["Error"] != null || TempData["Warning"] != null || TempData["Info"] != null)
+{
+    var payload = new
+    {
+        success = TempData["Success"]?.ToString(),
+        error = TempData["Error"]?.ToString(),
+        warning = TempData["Warning"]?.ToString(),
+        info = TempData["Info"]?.ToString()
+    };
+    <script type="application/json" id="mt-tempdata-json">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(payload))</script>
+}

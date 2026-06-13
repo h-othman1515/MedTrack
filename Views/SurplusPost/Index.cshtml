@@ -1,0 +1,78 @@
+﻿@model IEnumerable<MedTrack.Models.SurplusPost>
+@{ ViewData["Title"] = "Surplus Board"; }
+
+<div class="fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-arrow-left-right me-2"></i>Surplus Board</h2>
+            <p class="text-muted mb-0">Browse available surplus medication listings</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="MyPosts" class="btn btn-outline-primary">
+                <i class="bi bi-list-ul me-1"></i>My Posts
+            </a>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Post Surplus
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0">@item.Drug.GenericName</h5>
+                            <span class="badge @(item.Status == MedTrack.Models.SurplusStatus.Available ? "bg-success" : "bg-warning text-dark")">
+                                @item.Status
+                            </span>
+                        </div>
+                        <div class="small text-muted mb-1">
+                            <i class="bi bi-building me-1"></i>@item.Pharmacy.Name
+                        </div>
+                        <div class="small text-muted mb-3">
+                            <i class="bi bi-box me-1"></i>@item.Quantity @item.Drug.DefaultUnit available
+                        </div>
+                        @if (item.ExpiryDate.HasValue)
+                        {
+                            <div class="small text-muted mb-3">
+                                <i class="bi bi-calendar-event me-1"></i>Expires @item.ExpiryDate.Value.ToString("yyyy-MM-dd")
+                            </div>
+                        }
+
+                        <div class="d-flex gap-2">
+                            @if (item.Status == MedTrack.Models.SurplusStatus.Available)
+                            {
+                                <a asp-controller="TransferRequest" asp-action="Create" asp-route-surplusPostId="@item.Id"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-send me-1"></i>Request Transfer
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-secondary" disabled>
+                                    <i class="bi bi-lock me-1"></i>Reserved
+                                </button>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white small text-muted">
+                        Posted @item.PostedAt.ToString("yyyy-MM-dd HH:mm")
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1"></i>
+                <p class="mt-2 mb-0">No surplus listings available.</p>
+            </div>
+        </div>
+    }
+</div>

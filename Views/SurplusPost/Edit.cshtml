@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Edit Surplus Post";
+    ViewData["PageIcon"] = "bi-pencil-square";
+    ViewData["Subtitle"] = "Update surplus listing";
+    ViewData["BackUrl"] = Url.Action("MyPosts");
+}
+
+<div class="fade-in">
+    <partial name="_PageHeader" />
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body p-4 text-center text-muted">
+                    <i class="bi bi-pencil-square fs-1"></i>
+                    <p class="mt-2 mb-0">Edit is not available for surplus posts.</p>
+                    <a asp-action="MyPosts" class="btn btn-outline-secondary mt-3">
+                        <i class="bi bi-arrow-left me-1"></i>Back to My Posts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

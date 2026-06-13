@@ -1,0 +1,118 @@
+﻿@model MedTrack.Models.ViewModels.AccessDeniedViewModel
+@{
+    ViewData["Title"] = "Access Denied";
+    if (!Model.IsAuthenticated)
+    {
+        ViewData["HomeTheme"] = true;
+    }
+}
+
+@if (!Model.IsAuthenticated)
+{
+    <partial name="_PillField" />
+    <partial name="_HomeNav" />
+}
+
+@if (Model.IsAuthenticated)
+{
+    <div class="mt-access-denied mt-access-denied--in-app fade-in">
+        <div class="mt-access-denied__card">
+            <div class="mt-access-denied__header">
+                <span class="mt-access-denied__code">403</span>
+                <div class="mt-access-denied__icon" aria-hidden="true">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <h1>Access restricted</h1>
+                <p class="mt-access-denied__lead">
+                    Your account is signed in, but this area requires different permissions.
+                </p>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.RoleLabel))
+            {
+                <div class="mt-access-denied__session">
+                    <div class="mt-access-denied__session-label">Signed in as</div>
+                    <div class="mt-access-denied__session-row">
+                        <span class="role-badge @Model.RoleBadgeClass">@Model.RoleLabel</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.UserEmail))
+                        {
+                            <span class="mt-access-denied__email">@Model.UserEmail</span>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.RequestedPath))
+            {
+                <div class="mt-access-denied__hint">
+                    <i class="bi bi-link-45deg"></i>
+                    <div>
+                        <strong>Requested page</strong>
+                        <code class="mt-access-denied__path">@Model.RequestedPath</code>
+                    </div>
+                </div>
+            }
+
+            <div class="mt-access-denied__tips">
+                <div class="mt-access-denied__tips-title"><i class="bi bi-lightbulb me-1"></i>What you can do</div>
+                <ul>
+                    <li>Return to your dashboard and use the navigation menu for your role.</li>
+                    <li>Contact a system administrator if you believe you should have access.</li>
+                    <li>Sign out and sign in with a different account if needed.</li>
+                </ul>
+            </div>
+
+            <div class="mt-access-denied__actions">
+                @if (!string.IsNullOrWhiteSpace(Model.DashboardUrl))
+                {
+                    <a href="@Model.DashboardUrl" class="btn-primary-mt">
+                        <i class="bi bi-grid"></i> @Model.DashboardLabel
+                    </a>
+                }
+                <a href="/" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-house me-1"></i> Home
+                </a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <main>
+        <section class="mt-auth-page">
+            <div class="mt-auth-wrap">
+                <div class="mt-access-denied__card mt-access-denied__card--public">
+                    <div class="mt-access-denied__header">
+                        <span class="mt-access-denied__code">403</span>
+                        <div class="mt-access-denied__icon" aria-hidden="true">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </div>
+                        <h1>Access denied</h1>
+                        <p class="mt-access-denied__lead">
+                            You need to sign in with an authorized account to view this page.
+                        </p>
+                    </div>
+
+                    <div class="mt-access-denied__tips">
+                        <div class="mt-access-denied__tips-title"><i class="bi bi-info-circle me-1"></i>Before you continue</div>
+                        <ul>
+                            <li>Pharmacy, MOH, distributor, and admin areas each require the correct role.</li>
+                            <li>New pharmacy registrations must be approved before full access is granted.</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-access-denied__actions mt-access-denied__actions--stacked">
+                        <a href="/Account/Login" class="btn-primary-mt w-100 justify-content-center">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign in
+                        </a>
+                        <a href="/" class="btn btn-outline-secondary w-100 rounded-pill">
+                            <i class="bi bi-house me-1"></i> Back to home
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-auth-footer">MedTrack Jordan — Orange Internship 2025</div>
+            </div>
+        </section>
+    </main>
+}
